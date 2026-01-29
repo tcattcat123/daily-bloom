@@ -62,6 +62,7 @@ export default {
           hover: "hsl(var(--habit-green-hover))",
         },
         "ritual-gold": "hsl(var(--ritual-gold))",
+        "streak-orange": "hsl(var(--streak-orange))",
         "chip-bg": "hsl(var(--chip-bg))",
       },
       borderRadius: {
