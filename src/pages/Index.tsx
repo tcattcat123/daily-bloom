@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
 
 const Index = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading: authLoading } = useAuth();
   const {
     rituals,
     habits,
@@ -89,8 +89,8 @@ const Index = () => {
     month: "short",
   });
 
-  // Show loading state while data loads from localStorage
-  if (!isLoaded) {
+  // Show loading state while data loads
+  if (!isLoaded || authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -154,7 +154,7 @@ const Index = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={logout}
+            onClick={() => logout()}
             className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             title="Выйти"
           >
