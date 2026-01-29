@@ -13,15 +13,22 @@ interface PillItem {
   done: boolean;
 }
 
+interface RitualItem {
+  text: string;
+  done: boolean;
+}
+
 interface HabitSettingsModalProps {
   open: boolean;
   onClose: () => void;
   habits: string[];
   personalHabits: string[];
+  rituals: RitualItem[];
   pills: PillItem[];
   pillsEnabled: boolean;
   onSaveHabits: (habits: string[]) => void;
   onSavePersonalHabits: (habits: string[]) => void;
+  onSaveRituals: (rituals: RitualItem[]) => void;
   onSavePills: (pills: PillItem[]) => void;
   onTogglePills: (enabled: boolean) => void;
 }
@@ -31,19 +38,23 @@ const HabitSettingsModal = ({
   onClose, 
   habits, 
   personalHabits,
+  rituals,
   pills,
   pillsEnabled,
   onSaveHabits, 
   onSavePersonalHabits,
+  onSaveRituals,
   onSavePills,
   onTogglePills
 }: HabitSettingsModalProps) => {
   const [localHabits, setLocalHabits] = useState<string[]>(habits);
   const [localPersonalHabits, setLocalPersonalHabits] = useState<string[]>(personalHabits);
+  const [localRituals, setLocalRituals] = useState<RitualItem[]>(rituals);
   const [localPills, setLocalPills] = useState<PillItem[]>(pills);
   const [localPillsEnabled, setLocalPillsEnabled] = useState(pillsEnabled);
   const [newHabit, setNewHabit] = useState("");
   const [newPersonalHabit, setNewPersonalHabit] = useState("");
+  const [newRitual, setNewRitual] = useState("");
   const [newPillName, setNewPillName] = useState("");
   const [newPillTime, setNewPillTime] = useState("утро");
 
@@ -51,10 +62,11 @@ const HabitSettingsModal = ({
     if (open) {
       setLocalHabits(habits);
       setLocalPersonalHabits(personalHabits);
+      setLocalRituals(rituals);
       setLocalPills(pills);
       setLocalPillsEnabled(pillsEnabled);
     }
-  }, [open, habits, personalHabits, pills, pillsEnabled]);
+  }, [open, habits, personalHabits, rituals, pills, pillsEnabled]);
 
   const handleAddHabit = () => {
     if (newHabit.trim()) {
@@ -70,6 +82,13 @@ const HabitSettingsModal = ({
     }
   };
 
+  const handleAddRitual = () => {
+    if (newRitual.trim()) {
+      setLocalRituals([...localRituals, { text: newRitual.trim(), done: false }]);
+      setNewRitual("");
+    }
+  };
+
   const handleAddPill = () => {
     if (newPillName.trim()) {
       setLocalPills([...localPills, { name: newPillName.trim(), time: newPillTime, done: false }]);
@@ -80,6 +99,7 @@ const HabitSettingsModal = ({
   const handleSave = () => {
     onSaveHabits(localHabits);
     onSavePersonalHabits(localPersonalHabits);
+    onSaveRituals(localRituals);
     onSavePills(localPills);
     onTogglePills(localPillsEnabled);
     onClose();
@@ -92,12 +112,50 @@ const HabitSettingsModal = ({
           <DialogTitle>Настройки</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="work" className="mt-4">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="rituals" className="mt-4">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="rituals" className="text-xs">Утро</TabsTrigger>
             <TabsTrigger value="work" className="text-xs">Рабочие</TabsTrigger>
             <TabsTrigger value="personal" className="text-xs">Личные</TabsTrigger>
             <TabsTrigger value="pills" className="text-xs">Таблетки</TabsTrigger>
           </TabsList>
+          
+          {/* Rituals Tab */}
+          <TabsContent value="rituals" className="mt-4">
+            <p className="text-xs text-muted-foreground mb-3">
+              Утренние ритуалы для продуктивного начала дня
+            </p>
+            <div className="flex flex-col gap-2">
+              {localRituals.map((ritual, idx) => (
+                <div key={idx} className="flex items-center gap-2 group">
+                  <div className="flex-1 px-3 py-2 bg-ritual-gold/10 rounded-lg text-sm text-foreground">
+                    {ritual.text}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-8 w-8"
+                    onClick={() => setLocalRituals(localRituals.filter((_, i) => i !== idx))}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              <div className="flex items-center gap-2 mt-2">
+                <Input
+                  placeholder="Новый утренний ритуал..."
+                  value={newRitual}
+                  onChange={(e) => setNewRitual(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddRitual()}
+                  className="flex-1"
+                />
+                <Button onClick={handleAddRitual} size="icon" variant="outline">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
           
           {/* Work Habits Tab */}
           <TabsContent value="work" className="mt-4">
