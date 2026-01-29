@@ -33,8 +33,8 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: Person
         </button>
       </div>
       
-      {/* Matrix Table */}
-      <div className="overflow-x-auto mb-4">
+      {/* Matrix Table with Progress */}
+      <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr>
@@ -51,62 +51,62 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: Person
                   {day}
                 </th>
               ))}
+              <th className="text-right text-[10px] font-medium text-muted-foreground pb-2 pl-3">
+                
+              </th>
             </tr>
           </thead>
           <tbody>
-            {habits.map((habit, habitIdx) => (
-              <tr key={habitIdx}>
-                <td className="text-[11px] font-medium text-foreground py-1.5 pr-3 whitespace-nowrap">
-                  {habit}
-                </td>
-                {weekData.map((day, dayIdx) => {
-                  const isDone = day.completedIndices.includes(habitIdx);
-                  return (
-                    <td key={dayIdx} className="text-center py-1.5 px-1">
-                      <button
-                        onClick={() => onToggle(dayIdx, habitIdx)}
-                        className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
-                          isDone 
-                            ? 'bg-habit-green' 
-                            : 'border border-muted-foreground/30 hover:border-muted-foreground'
-                        }`}
-                      >
-                        {isDone && <Check className="w-3 h-3 text-white" />}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
+            {habits.map((habit, habitIdx) => {
+              const progress = getHabitProgress(habitIdx);
+              const isPerfect = progress === 100;
+              
+              return (
+                <tr key={habitIdx}>
+                  <td className="text-[11px] font-medium text-foreground py-1.5 pr-3 whitespace-nowrap">
+                    {habit}
+                  </td>
+                  {weekData.map((day, dayIdx) => {
+                    const isDone = day.completedIndices.includes(habitIdx);
+                    return (
+                      <td key={dayIdx} className="text-center py-1.5 px-1">
+                        <button
+                          onClick={() => onToggle(dayIdx, habitIdx)}
+                          className={`w-5 h-5 rounded flex items-center justify-center transition-all ${
+                            isDone 
+                              ? 'bg-habit-green' 
+                              : 'border border-muted-foreground/30 hover:border-muted-foreground'
+                          }`}
+                        >
+                          {isDone && <Check className="w-3 h-3 text-white" />}
+                        </button>
+                      </td>
+                    );
+                  })}
+                  {/* Progress bar column */}
+                  <td className="pl-3">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-habit-green rounded-full transition-all duration-500"
+                          style={{ width: `${progress}%` }}
+                        />
+                      </div>
+                      <span className={`text-[9px] font-bold min-w-6 ${
+                        isPerfect ? 'text-habit-green' : 'text-muted-foreground'
+                      }`}>
+                        {progress}%
+                      </span>
+                      {isPerfect && (
+                        <Trophy className="w-2.5 h-2.5 text-ritual-gold" />
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-      </div>
-
-      {/* Progress Bars */}
-      <div className="flex flex-col gap-1.5 pt-3 border-t border-border/50">
-        {habits.map((habit, habitIdx) => {
-          const progress = getHabitProgress(habitIdx);
-          const isPerfect = progress === 100;
-          
-          return (
-            <div key={habitIdx} className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-habit-green rounded-full transition-all duration-500"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <span className={`text-[10px] font-bold min-w-7 text-right ${
-                isPerfect ? 'text-habit-green' : 'text-muted-foreground'
-              }`}>
-                {progress}%
-              </span>
-              {isPerfect && (
-                <Trophy className="w-3 h-3 text-ritual-gold" />
-              )}
-            </div>
-          );
-        })}
       </div>
     </div>
   );
