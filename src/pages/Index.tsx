@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { LayoutGrid, LayoutList, RotateCcw, Settings, Check } from "lucide-react";
+import { LayoutGrid, LayoutList, RotateCcw, Settings, Check, LogOut } from "lucide-react";
 import confetti from "canvas-confetti";
 
 import RitualCard from "@/components/RitualCard";
@@ -9,6 +9,7 @@ import PillTrackerCard from "@/components/PillTrackerCard";
 import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const DEFAULT_RITUALS = ["Стакан воды", "Медитация", "Зарядка", "Контрастный душ"];
 const DEFAULT_HABITS = ["Подъем 07:00", "Спорт", "Deep Work", "Чтение", "План"];
@@ -52,6 +53,7 @@ const generateWeek = (): DayData[] => {
 };
 
 const Index = () => {
+  const { user, logout } = useAuth();
   const [rituals, setRituals] = useState<Ritual[]>(
     DEFAULT_RITUALS.map((text) => ({ text, done: false }))
   );
@@ -185,9 +187,9 @@ const Index = () => {
           {/* User Avatar */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-xs font-bold">
-              A
+              {user?.nickname?.charAt(0).toUpperCase() || 'U'}
             </div>
-            <span className="text-sm font-medium text-foreground">Alex</span>
+            <span className="text-sm font-medium text-foreground">{user?.nickname || 'User'}</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
@@ -229,6 +231,15 @@ const Index = () => {
             className="h-8 w-8 p-0"
           >
             <Settings className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={logout}
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+            title="Выйти"
+          >
+            <LogOut className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="outline"
