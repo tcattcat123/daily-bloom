@@ -4,7 +4,6 @@ import confetti from "canvas-confetti";
 
 import RitualCard from "@/components/RitualCard";
 import CircularProgress from "@/components/CircularProgress";
-import ProgressCard from "@/components/ProgressCard";
 import PersonalStandardCard from "@/components/PersonalStandardCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
 import { Button } from "@/components/ui/button";
@@ -182,8 +181,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Stats Deck - Top Row: 4 compact cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      {/* Stats Deck - Top Row: 3 compact cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
         {/* Ritual Card */}
         <RitualCard
           rituals={rituals}
@@ -209,16 +208,12 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Progress Card - compact */}
-        <ProgressCard habits={habits} weekData={weekData} />
-
-        {/* Personal Standard Card - compact, white */}
+        {/* Personal Development Card with progress bars */}
         <PersonalStandardCard
           habits={habits}
           weekData={weekData}
           onToggle={toggleHabit}
           onAddHabit={() => setSettingsOpen(true)}
-          compact
         />
       </div>
 
