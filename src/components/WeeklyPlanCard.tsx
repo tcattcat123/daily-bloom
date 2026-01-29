@@ -1,4 +1,4 @@
-import { TrendingUp, Flame, Target } from "lucide-react";
+import { TrendingUp, Flame, Target, Sun, Sparkles } from "lucide-react";
 import CircularProgress from "./CircularProgress";
 
 interface DayData {
@@ -13,9 +13,19 @@ interface WeeklyPlanCardProps {
   totalDone: number;
   totalPossible: number;
   planPercent: number;
+  morningRitualsDone?: number;
+  morningRitualsTotal?: number;
 }
 
-const WeeklyPlanCard = ({ weekData, habits, totalDone, totalPossible, planPercent }: WeeklyPlanCardProps) => {
+const WeeklyPlanCard = ({ 
+  weekData, 
+  habits, 
+  totalDone, 
+  totalPossible, 
+  planPercent,
+  morningRitualsDone = 0,
+  morningRitualsTotal = 4
+}: WeeklyPlanCardProps) => {
   const todayIndex = (new Date().getDay() + 6) % 7;
   
   // Calculate streak (consecutive days with all habits done)
@@ -33,12 +43,51 @@ const WeeklyPlanCard = ({ weekData, habits, totalDone, totalPossible, planPercen
     habits.length > 0 ? Math.round((day.completedIndices.length / habits.length) * 100) : 0
   );
 
-  // Best day this week
-  const bestDayPercent = Math.max(...dailyProgress);
-  const bestDayIndex = dailyProgress.indexOf(bestDayPercent);
-
   // Perfect days count
   const perfectDays = dailyProgress.filter(p => p === 100).length;
+
+  // Morning ritual percentage
+  const morningPercent = morningRitualsTotal > 0 
+    ? Math.round((morningRitualsDone / morningRitualsTotal) * 100) 
+    : 0;
+
+  // Motivational messages based on different metrics
+  const getMotivation = () => {
+    if (planPercent >= 90) return { text: "Легенда! 🏆", color: "text-habit-green" };
+    if (planPercent >= 80) return { text: "Невероятно! ✨", color: "text-habit-green" };
+    if (planPercent >= 70) return { text: "Отличный темп! 🚀", color: "text-habit-green" };
+    if (planPercent >= 60) return { text: "Хороший прогресс! 💪", color: "text-primary" };
+    if (planPercent >= 50) return { text: "На верном пути! 🎯", color: "text-primary" };
+    if (planPercent >= 30) return { text: "Продолжай! 🌱", color: "text-muted-foreground" };
+    return { text: "Начни сегодня! ⭐", color: "text-muted-foreground" };
+  };
+
+  const motivation = getMotivation();
+
+  // Generate waveform-style bars (multiple thin lines per day for aesthetic effect)
+  const generateWaveformBars = () => {
+    const bars: { height: number; isToday: boolean; isPerfect: boolean; dayIndex: number }[] = [];
+    
+    dailyProgress.forEach((percent, dayIdx) => {
+      // Create 3-4 thin bars per day for waveform effect
+      const numBars = 3;
+      for (let i = 0; i < numBars; i++) {
+        // Add slight variation for visual interest
+        const variation = Math.random() * 15 - 7.5;
+        const baseHeight = Math.max(percent * 0.22 + variation, 4);
+        bars.push({
+          height: Math.min(baseHeight, 24),
+          isToday: dayIdx === todayIndex,
+          isPerfect: percent === 100,
+          dayIndex: dayIdx
+        });
+      }
+    });
+    
+    return bars;
+  };
+
+  const waveformBars = generateWaveformBars();
 
   return (
     <div className="bg-card rounded-2xl p-3 shadow-card border border-border/50">
@@ -52,7 +101,7 @@ const WeeklyPlanCard = ({ weekData, habits, totalDone, totalPossible, planPercen
         
         <div className="flex-1 min-w-0">
           {/* Stats row */}
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <div>
               <div className="text-[11px] font-bold text-foreground">
                 {totalDone}/{totalPossible}
@@ -60,6 +109,12 @@ const WeeklyPlanCard = ({ weekData, habits, totalDone, totalPossible, planPercen
               <div className="text-[8px] text-muted-foreground">
                 выполнено
               </div>
+            </div>
+            
+            {/* Morning ritual indicator */}
+            <div className="flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded">
+              <Sun className="w-2.5 h-2.5 text-amber-500" />
+              <span className="text-[9px] font-bold text-amber-500">{morningPercent}%</span>
             </div>
             
             {/* Streak indicator */}
@@ -79,31 +134,27 @@ const WeeklyPlanCard = ({ weekData, habits, totalDone, totalPossible, planPercen
             )}
           </div>
           
-          {/* Mini bar chart - daily progress */}
-          <div className="flex items-end gap-0.5 h-6">
-            {dailyProgress.map((percent, idx) => (
+          {/* Waveform-style bar chart */}
+          <div className="flex items-end justify-center gap-[2px] h-6 px-1">
+            {waveformBars.map((bar, idx) => (
               <div 
                 key={idx} 
-                className="flex-1 flex flex-col items-center"
-              >
-                <div 
-                  className={`w-full rounded-sm transition-all duration-300 ${
-                    idx === todayIndex 
-                      ? 'bg-habit-green' 
-                      : percent === 100 
-                        ? 'bg-habit-green/70' 
-                        : 'bg-muted-foreground/20'
-                  }`}
-                  style={{ 
-                    height: `${Math.max(percent * 0.2, 2)}px`,
-                  }}
-                />
-              </div>
+                className={`w-[3px] rounded-full transition-all duration-300 ${
+                  bar.isToday 
+                    ? 'bg-habit-green' 
+                    : bar.isPerfect 
+                      ? 'bg-habit-green/60' 
+                      : 'bg-muted-foreground/30'
+                }`}
+                style={{ 
+                  height: `${bar.height}px`,
+                }}
+              />
             ))}
           </div>
           
           {/* Day labels */}
-          <div className="flex gap-0.5 mt-0.5">
+          <div className="flex gap-0.5 mt-1">
             {["П", "В", "С", "Ч", "П", "С", "В"].map((day, idx) => (
               <div 
                 key={idx} 
@@ -118,15 +169,22 @@ const WeeklyPlanCard = ({ weekData, habits, totalDone, totalPossible, planPercen
         </div>
       </div>
       
-      {/* Trend indicator */}
-      {planPercent > 50 && (
-        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border/30">
+      {/* Motivational message with sparkle */}
+      <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-border/30">
+        {planPercent >= 50 ? (
           <TrendingUp className="w-2.5 h-2.5 text-habit-green" />
-          <span className="text-[8px] text-muted-foreground">
-            {planPercent >= 80 ? 'Отличный прогресс!' : planPercent >= 60 ? 'Хороший темп' : 'Продолжай!'}
+        ) : (
+          <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+        )}
+        <span className={`text-[9px] font-medium ${motivation.color}`}>
+          {motivation.text}
+        </span>
+        {streak >= 3 && (
+          <span className="text-[8px] text-muted-foreground ml-auto">
+            🔥 {streak} дней подряд!
           </span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

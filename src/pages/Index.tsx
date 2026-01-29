@@ -251,6 +251,8 @@ const Index = () => {
           totalDone={totalDone}
           totalPossible={totalPossible}
           planPercent={planPercent}
+          morningRitualsDone={rituals.filter(r => r.done).length}
+          morningRitualsTotal={rituals.length}
         />
 
         {/* Pill Tracker Card - conditionally rendered */}
