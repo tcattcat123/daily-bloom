@@ -63,8 +63,6 @@ const Welcome = () => {
         setError('Пользователь с таким email уже существует');
       } else if (errorMessage.includes('Invalid login credentials')) {
         setError('Неверный email или пароль');
-      } else if (errorMessage.includes('Email not confirmed')) {
-        setError('Подтвердите email перед входом');
       } else {
         setError(errorMessage);
       }
