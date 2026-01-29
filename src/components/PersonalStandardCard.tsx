@@ -16,7 +16,7 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, compact 
     <div className="bg-card rounded-2xl p-4 shadow-card border border-border/50">
       <div className="flex items-center justify-between mb-3">
         <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-          Личный стандарт
+          Личное развитие
         </div>
         <button 
           onClick={onAddHabit}

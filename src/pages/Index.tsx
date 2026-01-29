@@ -130,10 +130,18 @@ const Index = () => {
     <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-foreground rounded" />
-          <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
-          <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-foreground rounded" />
+            <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
+            <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
+          </div>
+          <div className="hidden sm:block h-4 w-px bg-border" />
+          <div className="hidden sm:flex items-center gap-1.5 bg-habit-green/10 text-habit-green px-3 py-1.5 rounded-full">
+            <span className="text-xs font-medium">💰 На ваш счёт зачислено</span>
+            <span className="text-sm font-bold">12 часов</span>
+            <span className="text-xs font-medium">— потратьте их с умом</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5">

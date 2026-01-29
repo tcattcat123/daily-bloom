@@ -24,7 +24,7 @@ const CircularProgress = ({ value, size = 80, strokeWidth = 6 }: CircularProgres
         />
         {/* Progress circle */}
         <circle
-          className="text-foreground transition-all duration-500"
+          className="text-habit-green transition-all duration-500"
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           strokeDashoffset={offset}
