@@ -85,7 +85,7 @@ const Welcome = () => {
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">HumanOS</h1>
           <p className="text-muted-foreground text-sm">
-            Система управления привычками для перфекционистов
+            Система выработки железной дисциплины
           </p>
         </div>
 
@@ -185,16 +185,16 @@ const Welcome = () => {
         {/* Features preview */}
         <div className="mt-6 grid grid-cols-3 gap-3 text-center">
           <div className="bg-card/50 rounded-xl p-3 border border-border/50">
-            <div className="text-lg mb-1">☀️</div>
-            <div className="text-[10px] text-muted-foreground">Утренние ритуалы</div>
+            <div className="text-lg mb-1">💪</div>
+            <div className="text-[10px] text-muted-foreground">Дисциплина</div>
           </div>
           <div className="bg-card/50 rounded-xl p-3 border border-border/50">
-            <div className="text-lg mb-1">📊</div>
-            <div className="text-[10px] text-muted-foreground">Трекинг привычек</div>
+            <div className="text-lg mb-1">🔁</div>
+            <div className="text-[10px] text-muted-foreground">Привычки</div>
           </div>
           <div className="bg-card/50 rounded-xl p-3 border border-border/50">
-            <div className="text-lg mb-1">🎯</div>
-            <div className="text-[10px] text-muted-foreground">Цели на неделю</div>
+            <div className="text-lg mb-1">🏆</div>
+            <div className="text-[10px] text-muted-foreground">Результат</div>
           </div>
         </div>
       </div>
