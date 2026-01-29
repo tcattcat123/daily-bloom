@@ -57,6 +57,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        "habit-green": {
+          DEFAULT: "hsl(var(--habit-green))",
+          hover: "hsl(var(--habit-green-hover))",
+        },
+        "ritual-gold": "hsl(var(--ritual-gold))",
+        "chip-bg": "hsl(var(--chip-bg))",
       },
       borderRadius: {
         lg: "var(--radius)",
