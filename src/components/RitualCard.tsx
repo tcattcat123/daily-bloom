@@ -34,28 +34,25 @@ const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
         </div>
       )}
       
-      <div className={`flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-2 relative z-10 ${
+      <div className={`text-[10px] font-bold uppercase tracking-wider mb-2 relative z-10 ${
         isComplete ? 'text-white/80' : 'text-muted-foreground'
       }`}>
-        <span>Утренний ритуал</span>
-        <div className={`transition-all duration-500 ${isComplete ? 'scale-125' : 'scale-100'}`}>
-          <Sun className={`w-4 h-4 ${isComplete ? 'text-white animate-pulse' : 'text-ritual-gold'}`} />
-        </div>
+        Утренний ритуал
       </div>
       
-      <div className="flex flex-col gap-1 relative z-10">
+      <div className="flex flex-col gap-1.5 relative z-10">
         {rituals.map((ritual, idx) => (
           <div
             key={idx}
             onClick={() => onToggle(idx)}
-            className={`flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`flex items-center gap-2 cursor-pointer transition-colors ${
               ritual.done 
                 ? isComplete ? 'text-white' : 'text-foreground'
                 : isComplete ? 'text-white/70' : 'text-muted-foreground'
             }`}
           >
             <button
-              className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all ${
+              className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
                 ritual.done 
                   ? isComplete 
                     ? 'bg-white' 
@@ -66,10 +63,10 @@ const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
               }`}
             >
               {ritual.done && (
-                <Check className={`w-2 h-2 ${isComplete ? 'text-habit-green' : 'text-white'}`} />
+                <Check className={`w-2.5 h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'}`} />
               )}
             </button>
-            <span className="text-[10px] font-medium">
+            <span className="text-[11px] font-medium">
               {ritual.text}
             </span>
           </div>
