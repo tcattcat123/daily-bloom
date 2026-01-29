@@ -6,6 +6,7 @@ import RitualCard from "@/components/RitualCard";
 import CircularProgress from "@/components/CircularProgress";
 import PersonalStandardCard from "@/components/PersonalStandardCard";
 import PillTrackerCard from "@/components/PillTrackerCard";
+import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
 import { Button } from "@/components/ui/button";
 
@@ -243,23 +244,14 @@ const Index = () => {
           isComplete={allRitualsDone}
         />
 
-        {/* Plan Card - Weekly */}
-        <div className="bg-card rounded-2xl p-3 shadow-card border border-border/50">
-          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
-            План недели
-          </div>
-          <div className="flex items-center gap-2">
-            <CircularProgress value={planPercent} size={44} strokeWidth={4} />
-            <div>
-              <div className="text-[10px] text-muted-foreground">
-                {totalDone}/{totalPossible}
-              </div>
-              <div className="text-[9px] text-muted-foreground/70">
-                выполнено
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Weekly Plan Card with mini charts */}
+        <WeeklyPlanCard
+          weekData={weekData}
+          habits={habits}
+          totalDone={totalDone}
+          totalPossible={totalPossible}
+          planPercent={planPercent}
+        />
 
         {/* Pill Tracker Card - conditionally rendered */}
         {pillsEnabled && (
