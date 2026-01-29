@@ -90,7 +90,6 @@ const Index = () => {
         if (arr.includes(habitIdx)) {
           return { ...day, completedIndices: arr.filter((i) => i !== habitIdx) };
         } else {
-          // Confetti on habit complete (vertical mode only)
           if (layout === "vertical") {
             confetti({
               particleCount: 30,
@@ -114,7 +113,6 @@ const Index = () => {
 
   const handleSaveHabits = (newHabits: string[]) => {
     setHabits(newHabits);
-    // Reset completed indices that are out of bounds
     setWeekData((prev) =>
       prev.map((day) => ({
         ...day,
@@ -129,56 +127,55 @@ const Index = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 bg-foreground rounded" />
-          <h1 className="text-xl font-bold text-foreground">HumanOS</h1>
-          <span className="text-sm text-muted-foreground ml-2">{currentDate}</span>
+      <header className="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-foreground rounded" />
+          <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
+          <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Button
             variant={layout === "vertical" ? "default" : "outline"}
             size="sm"
             onClick={() => setLayout("vertical")}
-            className="gap-2"
+            className="gap-1.5 h-8 text-xs"
           >
-            <LayoutGrid className="w-4 h-4" />
+            <LayoutGrid className="w-3.5 h-3.5" />
             Колонки
           </Button>
           <Button
             variant={layout === "horizontal" ? "default" : "outline"}
             size="sm"
             onClick={() => setLayout("horizontal")}
-            className="gap-2"
+            className="gap-1.5 h-8 text-xs"
           >
-            <LayoutList className="w-4 h-4" />
+            <LayoutList className="w-3.5 h-3.5" />
             Строки
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setSettingsOpen(true)}
-            className="gap-2"
+            className="h-8 w-8 p-0"
           >
-            <Settings className="w-4 h-4" />
+            <Settings className="w-3.5 h-3.5" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={resetWeek}
-            className="gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+            className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
           >
-            <RotateCcw className="w-4 h-4" />
-            Сброс
+            <RotateCcw className="w-3.5 h-3.5" />
           </Button>
         </div>
       </header>
 
-      {/* Stats Deck - Top Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* Stats Deck - Top Row: 4 compact cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         {/* Ritual Card */}
         <RitualCard
           rituals={rituals}
@@ -187,86 +184,50 @@ const Index = () => {
         />
 
         {/* Plan Card */}
-        <div className="bg-card rounded-2xl p-5 shadow-card border border-border/50">
-          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
+        <div className="bg-card rounded-2xl p-4 shadow-card border border-border/50">
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
             План недели
           </div>
-          <div className="mt-auto">
-            <div className="text-3xl font-semibold text-foreground tracking-tight">
-              {planPercent}%
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Выполнено: {totalDone} / {totalPossible}
-            </div>
-            <div className="w-full h-1 bg-muted rounded-full mt-3 overflow-hidden">
-              <div
-                className="h-full bg-foreground rounded-full transition-all duration-500"
-                style={{ width: `${planPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Effectiveness Card with Circular Progress */}
-        <div className="bg-card rounded-2xl p-5 shadow-card border border-border/50">
-          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
-            Эффективность
-          </div>
-          <div className="flex items-end justify-between mt-auto">
+          <div className="flex items-center gap-3">
+            <CircularProgress value={planPercent} size={56} strokeWidth={5} />
             <div>
-              <div className="text-xs text-muted-foreground">Quality Score</div>
-            </div>
-            <CircularProgress value={planPercent} size={80} strokeWidth={6} />
-          </div>
-        </div>
-
-        {/* Activity Card */}
-        <div className="bg-card rounded-2xl p-5 shadow-card border border-border/50">
-          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
-            Активность
-          </div>
-          <div className="mt-auto">
-            <div className="text-3xl font-semibold text-foreground tracking-tight">
-              {planPercent > 0 ? Math.min(planPercent + 10, 100) : 0}%
-            </div>
-            <div className="flex gap-0.5 h-5 items-end mt-2">
-              {Array.from({ length: 15 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-1 bg-muted rounded-sm"
-                  style={{ height: `${Math.random() * 100}%` }}
-                />
-              ))}
+              <div className="text-xs text-muted-foreground">
+                {totalDone}/{totalPossible}
+              </div>
+              <div className="text-[10px] text-muted-foreground/70">
+                выполнено
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Second Row: Progress + Personal Standard */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        {/* Progress Card - compact */}
         <ProgressCard habits={habits} weekData={weekData} />
+
+        {/* Personal Standard Card - compact, white */}
         <PersonalStandardCard
           habits={habits}
           weekData={weekData}
           onToggle={toggleHabit}
           onAddHabit={() => setSettingsOpen(true)}
+          compact
         />
       </div>
 
       {/* Week View */}
       {layout === "vertical" ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3 overflow-x-auto pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 overflow-x-auto pb-4">
           {weekData.map((day, dayIdx) => (
-            <div key={dayIdx} className="flex flex-col gap-2 min-w-32">
-              <div className="text-center mb-2">
+            <div key={dayIdx} className="flex flex-col gap-1.5 min-w-28">
+              <div className="text-center mb-1.5">
                 <div
-                  className={`text-sm font-bold ${
+                  className={`text-xs font-bold ${
                     dayIdx === todayIndex ? "text-habit-green" : "text-foreground"
                   }`}
                 >
                   {day.name}
                 </div>
-                <div className="text-xs text-muted-foreground">{day.dateStr}</div>
+                <div className="text-[10px] text-muted-foreground">{day.dateStr}</div>
               </div>
               {habits.map((habit, hIdx) => {
                 const isDone = day.completedIndices.includes(hIdx);
@@ -274,23 +235,23 @@ const Index = () => {
                   <button
                     key={hIdx}
                     onClick={() => toggleHabit(dayIdx, hIdx)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border transition-all ${
+                    className={`flex items-center gap-1.5 px-2 py-2 rounded-lg border transition-all ${
                       isDone
                         ? "bg-habit-green border-habit-green text-white"
                         : "bg-card border-border hover:border-muted-foreground"
                     }`}
                   >
                     <div
-                      className={`w-4 h-4 rounded flex items-center justify-center border ${
+                      className={`w-3.5 h-3.5 rounded flex items-center justify-center border ${
                         isDone
                           ? "bg-white border-white"
                           : "border-muted-foreground"
                       }`}
                     >
-                      {isDone && <Check className="w-3 h-3 text-habit-green" />}
+                      {isDone && <Check className="w-2.5 h-2.5 text-habit-green" />}
                     </div>
                     <span
-                      className={`text-xs font-medium ${
+                      className={`text-[10px] font-medium truncate ${
                         isDone ? "text-white" : "text-muted-foreground"
                       }`}
                     >
@@ -303,33 +264,33 @@ const Index = () => {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           {weekData.map((day, dayIdx) => {
             const count = day.completedIndices.length;
             const isFull = count === habits.length;
             return (
               <div
                 key={dayIdx}
-                className="bg-card rounded-xl p-4 shadow-card flex flex-wrap items-center justify-between gap-4"
+                className="bg-card rounded-xl p-3 shadow-card flex flex-wrap items-center justify-between gap-3"
               >
-                <div className="min-w-32">
+                <div className="min-w-24">
                   <div
-                    className={`text-sm font-bold ${
+                    className={`text-xs font-bold ${
                       dayIdx === todayIndex ? "text-habit-green" : "text-foreground"
                     }`}
                   >
                     {day.name}
                   </div>
-                  <div className="text-xs text-muted-foreground">{day.dateStr}</div>
+                  <div className="text-[10px] text-muted-foreground">{day.dateStr}</div>
                 </div>
-                <div className="flex flex-wrap gap-2 flex-1">
+                <div className="flex flex-wrap gap-1.5 flex-1">
                   {habits.map((habit, hIdx) => {
                     const isDone = day.completedIndices.includes(hIdx);
                     return (
                       <button
                         key={hIdx}
                         onClick={() => toggleHabit(dayIdx, hIdx)}
-                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
                           isDone
                             ? "bg-habit-green text-white"
                             : "bg-chip-bg text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -341,7 +302,7 @@ const Index = () => {
                   })}
                 </div>
                 <div
-                  className={`text-sm font-bold min-w-10 text-right ${
+                  className={`text-xs font-bold min-w-8 text-right ${
                     isFull ? "text-habit-green" : "text-muted-foreground"
                   }`}
                 >
