@@ -5,11 +5,17 @@ import confetti from "canvas-confetti";
 import RitualCard from "@/components/RitualCard";
 import CircularProgress from "@/components/CircularProgress";
 import PersonalStandardCard from "@/components/PersonalStandardCard";
+import PillTrackerCard from "@/components/PillTrackerCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_RITUALS = ["Стакан воды", "Медитация", "Зарядка", "Контрастный душ"];
 const DEFAULT_HABITS = ["Подъем 07:00", "Спорт", "Deep Work", "Чтение", "План"];
+const DEFAULT_PILLS = [
+  { name: "Витамин D", time: "утро", done: false },
+  { name: "Омега-3", time: "обед", done: false },
+  { name: "Магний", time: "вечер", done: false },
+];
 
 interface DayData {
   name: string;
@@ -48,6 +54,7 @@ const Index = () => {
     DEFAULT_RITUALS.map((text) => ({ text, done: false }))
   );
   const [habits, setHabits] = useState<string[]>(DEFAULT_HABITS);
+  const [pills, setPills] = useState(DEFAULT_PILLS);
   const [weekData, setWeekData] = useState<DayData[]>(generateWeek);
   const [layout, setLayout] = useState<"vertical" | "horizontal">("vertical");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -78,6 +85,12 @@ const Index = () => {
   const toggleRitual = (index: number) => {
     setRituals((prev) =>
       prev.map((r, i) => (i === index ? { ...r, done: !r.done } : r))
+    );
+  };
+
+  const togglePill = (index: number) => {
+    setPills((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, done: !p.done } : p))
     );
   };
 
@@ -181,8 +194,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Stats Deck - Top Row: 3 compact cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 mb-5">
+      {/* Stats Deck - Top Row: 4 compact cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-5">
         {/* Ritual Card */}
         <RitualCard
           rituals={rituals}
@@ -207,6 +220,13 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Pill Tracker Card */}
+        <PillTrackerCard
+          pills={pills}
+          onToggle={togglePill}
+          onAddPill={() => {}}
+        />
 
         {/* Personal Development Card with progress bars */}
         <PersonalStandardCard
