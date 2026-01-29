@@ -227,9 +227,9 @@ const Index = () => {
             
             return (
               <div key={dayIdx} className="flex flex-col gap-1.5 min-w-28">
-                <div className="flex items-center justify-center gap-2 mb-1.5">
-                  <CircularProgress value={dayProgress} size={32} strokeWidth={3} />
-                  <div>
+                <div className="flex flex-col items-center mb-2">
+                  <CircularProgress value={dayProgress} size={80} strokeWidth={6} />
+                  <div className="text-center mt-1">
                     <div
                       className={`text-xs font-bold ${
                         dayIdx === todayIndex ? "text-habit-green" : "text-foreground"
