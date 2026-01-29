@@ -13,19 +13,37 @@ interface RitualCardProps {
 
 const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
   return (
-    <div className={`rounded-2xl p-3 transition-all duration-300 ${
+    <div className={`rounded-2xl p-3 transition-all duration-500 relative overflow-hidden ${
       isComplete 
         ? 'bg-habit-green shadow-card-green' 
         : 'bg-card shadow-card border border-border/50'
     }`}>
-      <div className={`flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-2 ${
+      {/* Animated sun background when complete */}
+      {isComplete && (
+        <div className="absolute -top-6 -right-6 pointer-events-none">
+          <div className="relative">
+            {/* Pulsing glow */}
+            <div className="absolute inset-0 animate-pulse">
+              <Sun className="w-20 h-20 text-white/20" strokeWidth={1} />
+            </div>
+            {/* Rotating rays */}
+            <div className="animate-[spin_20s_linear_infinite]">
+              <Sun className="w-20 h-20 text-white/30" strokeWidth={1.5} />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <div className={`flex items-center justify-between text-[10px] font-bold uppercase tracking-wider mb-2 relative z-10 ${
         isComplete ? 'text-white/80' : 'text-muted-foreground'
       }`}>
         <span>Утренний ритуал</span>
-        <Sun className={`w-3.5 h-3.5 ${isComplete ? 'text-white' : 'text-ritual-gold'}`} />
+        <div className={`transition-all duration-500 ${isComplete ? 'scale-125' : 'scale-100'}`}>
+          <Sun className={`w-4 h-4 ${isComplete ? 'text-white animate-pulse' : 'text-ritual-gold'}`} />
+        </div>
       </div>
       
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 relative z-10">
         {rituals.map((ritual, idx) => (
           <div
             key={idx}
@@ -57,6 +75,15 @@ const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
           </div>
         ))}
       </div>
+      
+      {/* Completion celebration text */}
+      {isComplete && (
+        <div className="mt-2 pt-2 border-t border-white/20 relative z-10">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-bold text-white/90">✨ Утро прошло идеально!</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

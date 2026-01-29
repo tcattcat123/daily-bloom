@@ -124,8 +124,14 @@ const Index = () => {
   const resetWeek = () => {
     if (confirm("Начать новую неделю?")) {
       setWeekData(generateWeek());
+      setPersonalWeekData(generateWeek());
       setRituals((prev) => prev.map((r) => ({ ...r, done: false })));
+      setPills((prev) => prev.map((p) => ({ ...p, done: false })));
     }
+  };
+
+  const handleSaveRituals = (newRituals: Ritual[]) => {
+    setRituals(newRituals);
   };
 
   const handleSaveHabits = (newHabits: string[]) => {
@@ -388,10 +394,12 @@ const Index = () => {
         onClose={() => setSettingsOpen(false)}
         habits={habits}
         personalHabits={personalHabits}
+        rituals={rituals}
         pills={pills}
         pillsEnabled={pillsEnabled}
         onSaveHabits={handleSaveHabits}
         onSavePersonalHabits={handleSavePersonalHabits}
+        onSaveRituals={handleSaveRituals}
         onSavePills={handleSavePills}
         onTogglePills={setPillsEnabled}
       />
