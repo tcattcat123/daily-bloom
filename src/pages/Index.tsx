@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 const DEFAULT_RITUALS = ["Стакан воды", "Медитация", "Зарядка", "Контрастный душ"];
 const DEFAULT_HABITS = ["Подъем 07:00", "Спорт", "Deep Work", "Чтение", "План"];
+const DEFAULT_PERSONAL_HABITS = ["Подъем 07:00", "Спорт", "Deep Work", "Чтение", "План"];
 const DEFAULT_PILLS = [
   { name: "Витамин D", time: "утро", done: false },
   { name: "Омега-3", time: "обед", done: false },
@@ -54,8 +55,11 @@ const Index = () => {
     DEFAULT_RITUALS.map((text) => ({ text, done: false }))
   );
   const [habits, setHabits] = useState<string[]>(DEFAULT_HABITS);
+  const [personalHabits, setPersonalHabits] = useState<string[]>(DEFAULT_PERSONAL_HABITS);
   const [pills, setPills] = useState(DEFAULT_PILLS);
+  const [pillsEnabled, setPillsEnabled] = useState(false);
   const [weekData, setWeekData] = useState<DayData[]>(generateWeek);
+  const [personalWeekData, setPersonalWeekData] = useState<DayData[]>(generateWeek);
   const [layout, setLayout] = useState<"vertical" | "horizontal">("vertical");
   const [settingsOpen, setSettingsOpen] = useState(false);
   
@@ -133,6 +137,34 @@ const Index = () => {
     );
   };
 
+  const handleSavePersonalHabits = (newHabits: string[]) => {
+    setPersonalHabits(newHabits);
+    setPersonalWeekData((prev) =>
+      prev.map((day) => ({
+        ...day,
+        completedIndices: day.completedIndices.filter((i) => i < newHabits.length),
+      }))
+    );
+  };
+
+  const handleSavePills = (newPills: typeof DEFAULT_PILLS) => {
+    setPills(newPills);
+  };
+
+  const togglePersonalHabit = (dayIdx: number, habitIdx: number) => {
+    setPersonalWeekData((prev) =>
+      prev.map((day, idx) => {
+        if (idx !== dayIdx) return day;
+        const arr = day.completedIndices;
+        if (arr.includes(habitIdx)) {
+          return { ...day, completedIndices: arr.filter((i) => i !== habitIdx) };
+        } else {
+          return { ...day, completedIndices: [...arr, habitIdx] };
+        }
+      })
+    );
+  };
+
   const currentDate = new Date().toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "short",
@@ -143,6 +175,14 @@ const Index = () => {
       {/* Header */}
       <header className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
+          {/* User Avatar */}
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-xs font-bold">
+              A
+            </div>
+            <span className="text-sm font-medium text-foreground">Alex</span>
+          </div>
+          <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-foreground rounded" />
             <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
@@ -194,8 +234,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Stats Deck - Top Row: 4 compact cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-5">
+      {/* Stats Deck - Top Row: dynamic grid */}
+      <div className={`grid grid-cols-2 gap-2 mb-5 ${pillsEnabled ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         {/* Ritual Card */}
         <RitualCard
           rituals={rituals}
@@ -221,18 +261,20 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Pill Tracker Card */}
-        <PillTrackerCard
-          pills={pills}
-          onToggle={togglePill}
-          onAddPill={() => {}}
-        />
+        {/* Pill Tracker Card - conditionally rendered */}
+        {pillsEnabled && (
+          <PillTrackerCard
+            pills={pills}
+            onToggle={togglePill}
+            onAddPill={() => setSettingsOpen(true)}
+          />
+        )}
 
         {/* Personal Development Card with progress bars */}
         <PersonalStandardCard
-          habits={habits}
-          weekData={weekData}
-          onToggle={toggleHabit}
+          habits={personalHabits}
+          weekData={personalWeekData}
+          onToggle={togglePersonalHabit}
           onAddHabit={() => setSettingsOpen(true)}
         />
       </div>
@@ -351,7 +393,13 @@ const Index = () => {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
         habits={habits}
-        onSave={handleSaveHabits}
+        personalHabits={personalHabits}
+        pills={pills}
+        pillsEnabled={pillsEnabled}
+        onSaveHabits={handleSaveHabits}
+        onSavePersonalHabits={handleSavePersonalHabits}
+        onSavePills={handleSavePills}
+        onTogglePills={setPillsEnabled}
       />
     </div>
   );
