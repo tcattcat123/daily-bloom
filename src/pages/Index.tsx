@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LayoutGrid, LayoutList, RotateCcw, Settings, Check, LogOut } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -10,62 +10,34 @@ import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-
-const DEFAULT_RITUALS = ["Стакан воды", "Медитация", "Зарядка", "Контрастный душ"];
-const DEFAULT_HABITS = ["Подъем 07:00", "Спорт", "Deep Work", "Чтение", "План"];
-const DEFAULT_PERSONAL_HABITS = ["Подъем 07:00", "Спорт", "Deep Work", "Чтение", "План"];
-const DEFAULT_PILLS = [
-  { name: "Витамин D", time: "утро", done: false },
-  { name: "Омега-3", time: "обед", done: false },
-  { name: "Магний", time: "вечер", done: false },
-];
-
-interface DayData {
-  name: string;
-  dateStr: string;
-  completedIndices: number[];
-}
-
-interface Ritual {
-  text: string;
-  done: boolean;
-}
-
-const generateWeek = (): DayData[] => {
-  const today = new Date();
-  const day = today.getDay();
-  const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(today);
-  monday.setDate(diff);
-
-  const names = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"];
-  const months = ["янв.", "февр.", "марта", "апр.", "мая", "июня", "июля", "авг.", "сент.", "окт.", "нояб.", "дек."];
-
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return {
-      name: names[i],
-      dateStr: `${d.getDate()} ${months[d.getMonth()]}`,
-      completedIndices: [],
-    };
-  });
-};
+import { useUserData } from "@/hooks/useUserData";
 
 const Index = () => {
   const { user, logout } = useAuth();
-  const [rituals, setRituals] = useState<Ritual[]>(
-    DEFAULT_RITUALS.map((text) => ({ text, done: false }))
-  );
-  const [habits, setHabits] = useState<string[]>(DEFAULT_HABITS);
-  const [personalHabits, setPersonalHabits] = useState<string[]>(DEFAULT_PERSONAL_HABITS);
-  const [pills, setPills] = useState(DEFAULT_PILLS);
-  const [pillsEnabled, setPillsEnabled] = useState(false);
-  const [weekData, setWeekData] = useState<DayData[]>(generateWeek);
-  const [personalWeekData, setPersonalWeekData] = useState<DayData[]>(generateWeek);
-  const [layout, setLayout] = useState<"vertical" | "horizontal">("vertical");
+  const {
+    rituals,
+    habits,
+    personalHabits,
+    pills,
+    pillsEnabled,
+    weekData,
+    personalWeekData,
+    layout,
+    isLoaded,
+    setRituals,
+    toggleRitual,
+    setHabits,
+    toggleHabit,
+    setPersonalHabits,
+    togglePersonalHabit,
+    setPills,
+    togglePill,
+    setPillsEnabled,
+    setLayout,
+    resetWeek,
+  } = useUserData();
+
   const [settingsOpen, setSettingsOpen] = useState(false);
-  
   const prevRitualCompleteRef = useRef(false);
 
   const allRitualsDone = rituals.every((r) => r.done);
@@ -89,95 +61,42 @@ const Index = () => {
     prevRitualCompleteRef.current = allRitualsDone;
   }, [allRitualsDone]);
 
-  const toggleRitual = (index: number) => {
-    setRituals((prev) =>
-      prev.map((r, i) => (i === index ? { ...r, done: !r.done } : r))
-    );
-  };
-
-  const togglePill = (index: number) => {
-    setPills((prev) =>
-      prev.map((p, i) => (i === index ? { ...p, done: !p.done } : p))
-    );
-  };
-
-  const toggleHabit = (dayIdx: number, habitIdx: number) => {
-    setWeekData((prev) =>
-      prev.map((day, idx) => {
-        if (idx !== dayIdx) return day;
-        const arr = day.completedIndices;
-        if (arr.includes(habitIdx)) {
-          return { ...day, completedIndices: arr.filter((i) => i !== habitIdx) };
-        } else {
-          if (layout === "vertical") {
-            confetti({
-              particleCount: 30,
-              spread: 40,
-              origin: { x: 0.5, y: 0.5 },
-              colors: ["#34C759"],
-            });
-          }
-          return { ...day, completedIndices: [...arr, habitIdx] };
-        }
-      })
-    );
-  };
-
-  const resetWeek = () => {
-    if (confirm("Начать новую неделю?")) {
-      setWeekData(generateWeek());
-      setPersonalWeekData(generateWeek());
-      setRituals((prev) => prev.map((r) => ({ ...r, done: false })));
-      setPills((prev) => prev.map((p) => ({ ...p, done: false })));
+  // Confetti on habit toggle (vertical layout)
+  const handleToggleHabit = (dayIdx: number, habitIdx: number) => {
+    const day = weekData[dayIdx];
+    const wasNotDone = !day.completedIndices.includes(habitIdx);
+    
+    toggleHabit(dayIdx, habitIdx);
+    
+    if (wasNotDone && layout === "vertical") {
+      confetti({
+        particleCount: 30,
+        spread: 40,
+        origin: { x: 0.5, y: 0.5 },
+        colors: ["#34C759"],
+      });
     }
   };
 
-  const handleSaveRituals = (newRituals: Ritual[]) => {
-    setRituals(newRituals);
-  };
-
-  const handleSaveHabits = (newHabits: string[]) => {
-    setHabits(newHabits);
-    setWeekData((prev) =>
-      prev.map((day) => ({
-        ...day,
-        completedIndices: day.completedIndices.filter((i) => i < newHabits.length),
-      }))
-    );
-  };
-
-  const handleSavePersonalHabits = (newHabits: string[]) => {
-    setPersonalHabits(newHabits);
-    setPersonalWeekData((prev) =>
-      prev.map((day) => ({
-        ...day,
-        completedIndices: day.completedIndices.filter((i) => i < newHabits.length),
-      }))
-    );
-  };
-
-  const handleSavePills = (newPills: typeof DEFAULT_PILLS) => {
-    setPills(newPills);
-  };
-
-  const togglePersonalHabit = (dayIdx: number, habitIdx: number) => {
-    setPersonalWeekData((prev) =>
-      prev.map((day, idx) => {
-        if (idx !== dayIdx) return day;
-        const arr = day.completedIndices;
-        if (arr.includes(habitIdx)) {
-          return { ...day, completedIndices: arr.filter((i) => i !== habitIdx) };
-        } else {
-          return { ...day, completedIndices: [...arr, habitIdx] };
-        }
-      })
-    );
+  const handleResetWeek = () => {
+    if (confirm("Начать новую неделю?")) {
+      resetWeek();
+    }
   };
 
   const currentDate = new Date().toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "short",
   });
+
+  // Show loading state while data loads from localStorage
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -244,7 +163,7 @@ const Index = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={resetWeek}
+            onClick={handleResetWeek}
             className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -318,7 +237,7 @@ const Index = () => {
                   return (
                     <button
                       key={hIdx}
-                      onClick={() => toggleHabit(dayIdx, hIdx)}
+                      onClick={() => handleToggleHabit(dayIdx, hIdx)}
                       className={`flex items-center gap-1.5 px-2 py-2 rounded-lg border transition-all ${
                         isDone
                           ? "bg-habit-green border-habit-green text-white"
@@ -374,7 +293,7 @@ const Index = () => {
                     return (
                       <button
                         key={hIdx}
-                        onClick={() => toggleHabit(dayIdx, hIdx)}
+                        onClick={() => handleToggleHabit(dayIdx, hIdx)}
                         className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
                           isDone
                             ? "bg-habit-green text-white"
@@ -408,10 +327,10 @@ const Index = () => {
         rituals={rituals}
         pills={pills}
         pillsEnabled={pillsEnabled}
-        onSaveHabits={handleSaveHabits}
-        onSavePersonalHabits={handleSavePersonalHabits}
-        onSaveRituals={handleSaveRituals}
-        onSavePills={handleSavePills}
+        onSaveHabits={setHabits}
+        onSavePersonalHabits={setPersonalHabits}
+        onSaveRituals={setRituals}
+        onSavePills={setPills}
         onTogglePills={setPillsEnabled}
       />
     </div>
