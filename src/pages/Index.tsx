@@ -181,8 +181,8 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Stats Deck - Top Row: 3 compact cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+      {/* Stats Deck - Top Row: 4 compact cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 mb-5">
         {/* Ritual Card */}
         <RitualCard
           rituals={rituals}
@@ -190,19 +190,41 @@ const Index = () => {
           isComplete={allRitualsDone}
         />
 
-        {/* Plan Card */}
-        <div className="bg-card rounded-2xl p-4 shadow-card border border-border/50">
-          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+        {/* Plan Card - Weekly */}
+        <div className="bg-card rounded-2xl p-3 shadow-card border border-border/50">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
             План недели
           </div>
-          <div className="flex items-center gap-3">
-            <CircularProgress value={planPercent} size={56} strokeWidth={5} />
+          <div className="flex items-center gap-2">
+            <CircularProgress value={planPercent} size={44} strokeWidth={4} />
             <div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-[10px] text-muted-foreground">
                 {totalDone}/{totalPossible}
               </div>
-              <div className="text-[10px] text-muted-foreground/70">
+              <div className="text-[9px] text-muted-foreground/70">
                 выполнено
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Today Card - Daily Progress */}
+        <div className="bg-card rounded-2xl p-3 shadow-card border border-border/50">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">
+            Сегодня
+          </div>
+          <div className="flex items-center gap-2">
+            <CircularProgress 
+              value={habits.length > 0 ? Math.round((weekData[todayIndex].completedIndices.length / habits.length) * 100) : 0} 
+              size={44} 
+              strokeWidth={4} 
+            />
+            <div>
+              <div className="text-[11px] font-bold text-foreground">
+                {weekData[todayIndex].name}
+              </div>
+              <div className="text-[9px] text-muted-foreground">
+                {weekData[todayIndex].completedIndices.length}/{habits.length} задач
               </div>
             </div>
           </div>
