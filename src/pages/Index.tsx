@@ -123,6 +123,16 @@ const Index = () => {
             <div className="w-4 h-4 bg-foreground rounded" />
             <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
+            {/* Mobile Start Button - small, inline with date */}
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleStartFresh}
+              className="sm:hidden gap-1 h-6 px-2 text-[10px] bg-habit-green hover:bg-habit-green/90 text-white"
+            >
+              <Play className="w-3 h-3" />
+              Начать
+            </Button>
           </div>
           <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="hidden sm:flex items-center gap-1.5 bg-habit-green/10 text-habit-green px-3 py-1.5 rounded-full">
@@ -133,11 +143,12 @@ const Index = () => {
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* Desktop Start Button */}
           <Button
             variant="default"
             size="sm"
             onClick={handleStartFresh}
-            className="gap-1.5 h-8 text-xs bg-habit-green hover:bg-habit-green/90 text-white"
+            className="hidden sm:flex gap-1.5 h-8 text-xs bg-habit-green hover:bg-habit-green/90 text-white"
           >
             <Play className="w-3.5 h-3.5" />
             Начать
