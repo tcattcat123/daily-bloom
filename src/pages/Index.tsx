@@ -9,6 +9,7 @@ import PillTrackerCard from "@/components/PillTrackerCard";
 import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
 import SupportRayButton from "@/components/SupportRayButton";
+import SupportRayNotifications from "@/components/SupportRayNotifications";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
@@ -342,6 +343,9 @@ const Index = () => {
         onResetWeek={resetWeek}
         onLogout={logout}
       />
+
+      {/* Support Ray Notifications */}
+      <SupportRayNotifications />
     </div>
   );
 };
