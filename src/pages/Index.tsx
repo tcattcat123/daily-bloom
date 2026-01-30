@@ -35,6 +35,7 @@ const Index = () => {
     setPillsEnabled,
     setLayout,
     resetWeek,
+    clearAllData,
   } = useUserData();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -85,8 +86,8 @@ const Index = () => {
   };
 
   const handleStartFresh = () => {
-    if (confirm("Сбросить все данные и начать заново?")) {
-      resetWeek();
+    if (confirm("Удалить все демо-данные и создать свой график?")) {
+      clearAllData();
       setSettingsOpen(true);
     }
   };

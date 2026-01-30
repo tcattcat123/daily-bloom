@@ -215,6 +215,20 @@ export function useUserData() {
     }));
   }, []);
 
+  // Clear all data (remove demo data)
+  const clearAllData = useCallback(() => {
+    setState({
+      rituals: [],
+      habits: [],
+      personalHabits: [],
+      pills: [],
+      pillsEnabled: false,
+      weekData: generateWeek(),
+      personalWeekData: generateWeek(),
+      layout: 'vertical',
+    });
+  }, []);
+
   return {
     ...state,
     isLoaded,
@@ -229,5 +243,6 @@ export function useUserData() {
     setPillsEnabled,
     setLayout,
     resetWeek,
+    clearAllData,
   };
 }
