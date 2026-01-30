@@ -98,9 +98,11 @@ const Welcome = () => {
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">HumanOS</h1>
-          <p className="text-white/50 text-sm font-medium tracking-wide uppercase">
+          <p className="text-white/50 text-sm font-medium tracking-wide uppercase mb-5">
             Система выработки железной дисциплины
           </p>
+          {/* Support Ray Button */}
+          <SupportRayButton variant="welcome" />
         </div>
 
         {/* Auth Card */}
@@ -195,11 +197,6 @@ const Welcome = () => {
               {isLogin ? 'Нет аккаунта? Зарегистрироваться' : 'Уже есть аккаунт? Войти'}
             </button>
           </div>
-        </div>
-
-        {/* Support Ray Button */}
-        <div className="mt-6 text-center animate-fade-in" style={{ animationDelay: '0.15s' }}>
-          <SupportRayButton variant="welcome" />
         </div>
 
         {/* Telegram link */}
