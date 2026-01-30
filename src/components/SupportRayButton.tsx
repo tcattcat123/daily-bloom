@@ -14,7 +14,7 @@ interface Profile {
 }
 
 interface SupportRayButtonProps {
-  variant?: 'default' | 'welcome';
+  variant?: 'default' | 'welcome' | 'full';
 }
 
 const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
@@ -128,6 +128,84 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
     );
   }
 
+  // Full variant for dashboard
+  if (variant === 'full') {
+    return (
+      <>
+        <div className="relative inline-flex">
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            disabled={isSending}
+            variant="outline"
+            className="gap-2 h-10 px-5 text-sm border-habit-green/30 text-habit-green hover:bg-habit-green/10 hover:border-habit-green"
+          >
+            <Sparkles className={`w-4 h-4 ${isSending ? 'animate-pulse' : ''}`} />
+            Отправить луч поддержки
+          </Button>
+          
+          {sparkles.map((sparkle) => (
+            <span
+              key={sparkle.id}
+              className="absolute top-1/2 left-1/2 w-1 h-1 bg-habit-green rounded-full animate-ping pointer-events-none"
+              style={{
+                transform: `translate(${sparkle.x}px, ${sparkle.y}px)`,
+                animationDuration: '0.6s',
+              }}
+            />
+          ))}
+        </div>
+
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-habit-green" />
+                Отправить луч поддержки
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Поиск по нику..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+
+              <ScrollArea className="h-64">
+                <div className="space-y-1">
+                  {filteredUsers.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Пользователи не найдены
+                    </p>
+                  ) : (
+                    filteredUsers.map((profile) => (
+                      <button
+                        key={profile.id}
+                        onClick={() => handleSendRayToUser(profile.id, profile.nickname || 'Пользователь')}
+                        disabled={isSending}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent transition-colors text-left group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-xs font-bold">
+                          {profile.nickname?.charAt(0).toUpperCase() || '?'}
+                        </div>
+                        <span className="text-sm font-medium flex-1">{profile.nickname}</span>
+                        <Sparkles className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:text-habit-green transition-all" />
+                      </button>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
   return (
     <>
       <div className="relative inline-flex">
@@ -139,8 +217,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
           className="gap-1.5 h-8 text-xs border-habit-green/30 text-habit-green hover:bg-habit-green/10 hover:border-habit-green"
         >
           <Sparkles className={`w-3.5 h-3.5 ${isSending ? 'animate-pulse' : ''}`} />
-          <span className="hidden sm:inline">Луч поддержки</span>
-          <span className="sm:hidden">✨</span>
+          Луч поддержки
         </Button>
         
         {sparkles.map((sparkle) => (
