@@ -133,6 +133,15 @@ const Index = () => {
               <Play className="w-3 h-3" />
               Начать
             </Button>
+            {/* Mobile Settings Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSettingsOpen(true)}
+              className="sm:hidden h-6 w-6 p-0"
+            >
+              <Settings className="w-3 h-3" />
+            </Button>
           </div>
           <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="hidden sm:flex items-center gap-1.5 bg-habit-green/10 text-habit-green px-3 py-1.5 rounded-full">
@@ -142,7 +151,7 @@ const Index = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="hidden sm:flex items-center gap-1.5">
           {/* Desktop Start Button */}
           <Button
             variant="default"
