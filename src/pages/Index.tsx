@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LayoutGrid, LayoutList, RotateCcw, Settings, Check, LogOut, Play } from "lucide-react";
+import { Settings, Check, Play } from "lucide-react";
 import confetti from "canvas-confetti";
 
 import RitualCard from "@/components/RitualCard";
@@ -156,40 +156,10 @@ const Index = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setLayout(layout === "vertical" ? "horizontal" : "vertical")}
-            className="h-8 w-8 p-0"
-            title={layout === "vertical" ? "Переключить на строки" : "Переключить на колонки"}
-          >
-            {layout === "vertical" ? (
-              <LayoutList className="w-3.5 h-3.5" />
-            ) : (
-              <LayoutGrid className="w-3.5 h-3.5" />
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => setSettingsOpen(true)}
             className="h-8 w-8 p-0"
           >
             <Settings className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => logout()}
-            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
-            title="Выйти"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleResetWeek}
-            className="h-8 w-8 p-0 text-destructive border-destructive/30 hover:bg-destructive/10"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
           </Button>
         </div>
       </header>
@@ -350,11 +320,15 @@ const Index = () => {
         rituals={rituals}
         pills={pills}
         pillsEnabled={pillsEnabled}
+        layout={layout}
         onSaveHabits={setHabits}
         onSavePersonalHabits={setPersonalHabits}
         onSaveRituals={setRituals}
         onSavePills={setPills}
         onTogglePills={setPillsEnabled}
+        onSetLayout={setLayout}
+        onResetWeek={resetWeek}
+        onLogout={logout}
       />
     </div>
   );

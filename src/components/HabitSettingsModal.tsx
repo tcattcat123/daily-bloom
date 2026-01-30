@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 interface PillItem {
   name: string;
@@ -26,11 +27,15 @@ interface HabitSettingsModalProps {
   rituals: RitualItem[];
   pills: PillItem[];
   pillsEnabled: boolean;
+  layout: "vertical" | "horizontal";
   onSaveHabits: (habits: string[]) => void;
   onSavePersonalHabits: (habits: string[]) => void;
   onSaveRituals: (rituals: RitualItem[]) => void;
   onSavePills: (pills: PillItem[]) => void;
   onTogglePills: (enabled: boolean) => void;
+  onSetLayout: (layout: "vertical" | "horizontal") => void;
+  onResetWeek: () => void;
+  onLogout: () => void;
 }
 
 const HabitSettingsModal = ({ 
@@ -41,17 +46,22 @@ const HabitSettingsModal = ({
   rituals,
   pills,
   pillsEnabled,
+  layout,
   onSaveHabits, 
   onSavePersonalHabits,
   onSaveRituals,
   onSavePills,
-  onTogglePills
+  onTogglePills,
+  onSetLayout,
+  onResetWeek,
+  onLogout
 }: HabitSettingsModalProps) => {
   const [localHabits, setLocalHabits] = useState<string[]>(habits);
   const [localPersonalHabits, setLocalPersonalHabits] = useState<string[]>(personalHabits);
   const [localRituals, setLocalRituals] = useState<RitualItem[]>(rituals);
   const [localPills, setLocalPills] = useState<PillItem[]>(pills);
   const [localPillsEnabled, setLocalPillsEnabled] = useState(pillsEnabled);
+  const [localLayout, setLocalLayout] = useState(layout);
   const [newHabit, setNewHabit] = useState("");
   const [newPersonalHabit, setNewPersonalHabit] = useState("");
   const [newRitual, setNewRitual] = useState("");
@@ -65,8 +75,9 @@ const HabitSettingsModal = ({
       setLocalRituals(rituals);
       setLocalPills(pills);
       setLocalPillsEnabled(pillsEnabled);
+      setLocalLayout(layout);
     }
-  }, [open, habits, personalHabits, rituals, pills, pillsEnabled]);
+  }, [open, habits, personalHabits, rituals, pills, pillsEnabled, layout]);
 
   const handleAddHabit = () => {
     if (newHabit.trim()) {
@@ -102,7 +113,21 @@ const HabitSettingsModal = ({
     onSaveRituals(localRituals);
     onSavePills(localPills);
     onTogglePills(localPillsEnabled);
+    onSetLayout(localLayout);
     onClose();
+  };
+
+  const handleResetWeek = () => {
+    if (confirm("Начать новую неделю? Прогресс текущей недели будет сброшен.")) {
+      onResetWeek();
+      onClose();
+    }
+  };
+
+  const handleLogout = () => {
+    if (confirm("Вы уверены, что хотите выйти?")) {
+      onLogout();
+    }
   };
 
   return (
@@ -113,11 +138,12 @@ const HabitSettingsModal = ({
         </DialogHeader>
         
         <Tabs defaultValue="rituals" className="mt-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="rituals" className="text-xs">Утро</TabsTrigger>
             <TabsTrigger value="work" className="text-xs">Рабочие</TabsTrigger>
             <TabsTrigger value="personal" className="text-xs">Личные</TabsTrigger>
             <TabsTrigger value="pills" className="text-xs">Таблетки</TabsTrigger>
+            <TabsTrigger value="other" className="text-xs">Прочее</TabsTrigger>
           </TabsList>
           
           {/* Rituals Tab */}
@@ -286,6 +312,69 @@ const HabitSettingsModal = ({
                 </div>
               </div>
             )}
+          </TabsContent>
+
+          {/* Other Settings Tab */}
+          <TabsContent value="other" className="mt-4">
+            <div className="flex flex-col gap-4">
+              {/* Layout Toggle */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Вид отображения</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={localLayout === "vertical" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLocalLayout("vertical")}
+                    className="flex-1 gap-2"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                    Колонки
+                  </Button>
+                  <Button
+                    variant={localLayout === "horizontal" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLocalLayout("horizontal")}
+                    className="flex-1 gap-2"
+                  >
+                    <LayoutList className="w-4 h-4" />
+                    Строки
+                  </Button>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Reset Week */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Сброс недели</Label>
+                <Button
+                  variant="outline"
+                  onClick={handleResetWeek}
+                  className="w-full gap-2 text-destructive border-destructive/30 hover:bg-destructive/10"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Начать новую неделю
+                </Button>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Сбросит прогресс всех привычек за текущую неделю
+                </p>
+              </div>
+
+              <Separator />
+
+              {/* Logout */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Аккаунт</Label>
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                  className="w-full gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Выйти из аккаунта
+                </Button>
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
         
