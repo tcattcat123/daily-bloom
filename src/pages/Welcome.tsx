@@ -14,7 +14,7 @@ const registerSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email('Некорректный email'),
+  nickname: z.string().min(2, 'Минимум 2 символа'),
   password: z.string().min(1, 'Введите пароль'),
 });
 
@@ -25,7 +25,7 @@ const Welcome = () => {
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, login } = useAuth();
+  const { register, loginWithNickname } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,14 +35,14 @@ const Welcome = () => {
 
     try {
       if (isLogin) {
-        const result = loginSchema.safeParse({ email, password });
+        const result = loginSchema.safeParse({ nickname: nickname.trim(), password });
         if (!result.success) {
           setError(result.error.errors[0].message);
           setIsSubmitting(false);
           return;
         }
 
-        await login(email, password);
+        await loginWithNickname(nickname.trim(), password);
         navigate('/');
       } else {
         const result = registerSchema.safeParse({ email, password, nickname: nickname.trim() });
@@ -63,7 +63,9 @@ const Welcome = () => {
       if (errorMessage.includes('User already registered')) {
         setError('Пользователь с таким email уже существует');
       } else if (errorMessage.includes('Invalid login credentials')) {
-        setError('Неверный email или пароль');
+        setError('Неверный никнейм или пароль');
+      } else if (errorMessage.includes('Пользователь не найден')) {
+        setError('Пользователь с таким никнеймом не найден');
       } else {
         setError(errorMessage);
       }
@@ -112,38 +114,39 @@ const Welcome = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-                <Input
-                  type="text"
-                  placeholder="Никнейм"
-                  value={nickname}
-                  onChange={(e) => {
-                    setNickname(e.target.value);
-                    setError('');
-                  }}
-                  className="h-14 text-base pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
-                  maxLength={20}
-                  autoFocus={!isLogin}
-                />
-              </div>
-            )}
-
+            {/* Nickname field - always shown for login, shown for register */}
             <div className="relative group">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
               <Input
-                type="email"
-                placeholder="Email"
-                value={email}
+                type="text"
+                placeholder="Никнейм"
+                value={nickname}
                 onChange={(e) => {
-                  setEmail(e.target.value);
+                  setNickname(e.target.value);
                   setError('');
                 }}
                 className="h-14 text-base pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
-                autoFocus={isLogin}
+                maxLength={20}
+                autoFocus
               />
             </div>
+
+            {/* Email field - only for registration */}
+            {!isLogin && (
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError('');
+                  }}
+                  className="h-14 text-base pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
+                />
+              </div>
+            )}
 
             <div className="relative group">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
@@ -166,7 +169,7 @@ const Welcome = () => {
             <Button 
               type="submit" 
               className="w-full h-14 text-base font-semibold gap-2 bg-white text-black hover:bg-white/90 rounded-xl mt-6 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-              disabled={isSubmitting || !email || !password || (!isLogin && !nickname.trim())}
+              disabled={isSubmitting || !nickname.trim() || !password || (!isLogin && !email)}
             >
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
