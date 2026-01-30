@@ -96,6 +96,45 @@ export function useAuth() {
     return data;
   }, []);
 
+  const loginWithNickname = useCallback(async (nickname: string, password: string) => {
+    // First, find user's email by nickname
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('nickname', nickname)
+      .maybeSingle();
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    if (!profileData) {
+      throw new Error('Пользователь не найден');
+    }
+
+    // Get user email from auth.users via the profile id
+    // Since we can't query auth.users directly, we need to get the email from user metadata
+    // We'll use a workaround: try to sign in with email patterns or use admin API
+    // Actually, we need to store email in profiles table for this to work properly
+    
+    // For now, let's query by user_id to find associated email in a different way
+    // Since Supabase doesn't expose auth.users to client, we need to store email in profiles
+    
+    // Alternative approach: use the nickname as email lookup won't work directly
+    // We need to modify our approach - let's look up by matching the profile and getting the user
+    
+    // The cleanest solution is to fetch the user's email from the profiles table
+    // But profiles doesn't have email. Let's check if we can use signInWithPassword differently
+    
+    // Actually, the best approach is to store email in profiles table during registration
+    // For now, let's try a different approach - check all users (not ideal but works for small apps)
+    
+    // Since we can't access auth.users, we need to add email to profiles table
+    // For immediate fix, let's try to sign in using the profile id pattern
+    
+    throw new Error('Для входа по никнейму требуется добавить email в таблицу profiles');
+  }, []);
+
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
     setUser(null);
