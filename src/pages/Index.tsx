@@ -154,22 +154,17 @@ const Index = () => {
             Начать
           </Button>
           <Button
-            variant={layout === "vertical" ? "default" : "outline"}
+            variant="outline"
             size="sm"
-            onClick={() => setLayout("vertical")}
-            className="gap-1.5 h-8 text-xs"
+            onClick={() => setLayout(layout === "vertical" ? "horizontal" : "vertical")}
+            className="h-8 w-8 p-0"
+            title={layout === "vertical" ? "Переключить на строки" : "Переключить на колонки"}
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            Колонки
-          </Button>
-          <Button
-            variant={layout === "horizontal" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setLayout("horizontal")}
-            className="gap-1.5 h-8 text-xs"
-          >
-            <LayoutList className="w-3.5 h-3.5" />
-            Строки
+            {layout === "vertical" ? (
+              <LayoutList className="w-3.5 h-3.5" />
+            ) : (
+              <LayoutGrid className="w-3.5 h-3.5" />
+            )}
           </Button>
           <Button
             variant="outline"
