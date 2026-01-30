@@ -125,8 +125,6 @@ const Index = () => {
             <div className="w-4 h-4 bg-foreground rounded" />
             <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
-            {/* Mobile Support Ray Button */}
-            <SupportRayButton />
             {/* Mobile Start Button - small, inline with date */}
             <Button
               variant="default"
@@ -156,8 +154,6 @@ const Index = () => {
         </div>
 
         <div className="hidden sm:flex items-center gap-1.5">
-          {/* Support Ray Button */}
-          <SupportRayButton />
           {/* Desktop Start Button */}
           <Button
             variant="default"
@@ -178,6 +174,11 @@ const Index = () => {
           </Button>
         </div>
       </header>
+
+      {/* Support Ray Button - Full Width */}
+      <div className="flex justify-center mb-5">
+        <SupportRayButton variant="full" />
+      </div>
 
       {/* Stats Deck - Top Row: dynamic grid */}
       <div className={`grid grid-cols-2 gap-2 mb-5 ${pillsEnabled ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
