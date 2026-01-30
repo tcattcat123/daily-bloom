@@ -125,6 +125,8 @@ const Index = () => {
             <div className="w-4 h-4 bg-foreground rounded" />
             <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
+            {/* Mobile Support Ray Button */}
+            <SupportRayButton />
             {/* Mobile Start Button - small, inline with date */}
             <Button
               variant="default"
