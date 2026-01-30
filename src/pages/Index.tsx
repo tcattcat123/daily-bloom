@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LayoutGrid, LayoutList, RotateCcw, Settings, Check, LogOut } from "lucide-react";
+import { LayoutGrid, LayoutList, RotateCcw, Settings, Check, LogOut, Play } from "lucide-react";
 import confetti from "canvas-confetti";
 
 import RitualCard from "@/components/RitualCard";
@@ -84,6 +84,13 @@ const Index = () => {
     }
   };
 
+  const handleStartFresh = () => {
+    if (confirm("Сбросить все данные и начать заново?")) {
+      resetWeek();
+      setSettingsOpen(true);
+    }
+  };
+
   const currentDate = new Date().toLocaleDateString("ru-RU", {
     day: "numeric",
     month: "short",
@@ -125,6 +132,15 @@ const Index = () => {
         </div>
 
         <div className="flex items-center gap-1.5">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleStartFresh}
+            className="gap-1.5 h-8 text-xs bg-habit-green hover:bg-habit-green/90 text-white"
+          >
+            <Play className="w-3.5 h-3.5" />
+            Начать
+          </Button>
           <Button
             variant={layout === "vertical" ? "default" : "outline"}
             size="sm"
