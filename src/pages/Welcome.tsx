@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { Sparkles, ArrowRight, Mail, Lock, User } from 'lucide-react';
 import { z } from 'zod';
+import FloatingNicknames from '@/components/FloatingNicknames';
 
 const registerSchema = z.object({
   email: z.string().email('Некорректный email'),
@@ -73,6 +74,9 @@ const Welcome = () => {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Floating Nicknames */}
+      <FloatingNicknames />
+
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] via-transparent to-white/[0.02]" />
       
