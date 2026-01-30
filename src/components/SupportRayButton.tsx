@@ -133,15 +133,14 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
     return (
       <>
         <div className="relative inline-flex">
-          <Button
+          <button
             onClick={() => setIsDialogOpen(true)}
             disabled={isSending}
-            variant="outline"
-            className="gap-2 h-10 px-5 text-sm border-habit-green/30 text-habit-green hover:bg-habit-green/10 hover:border-habit-green"
+            className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-habit-green/5 border border-habit-green/20 text-habit-green/70 hover:text-habit-green hover:bg-habit-green/10 hover:border-habit-green/40 transition-all duration-300 text-sm font-medium disabled:opacity-50"
           >
-            <Sparkles className={`w-4 h-4 ${isSending ? 'animate-pulse' : ''}`} />
-            Отправить луч поддержки
-          </Button>
+            <Sparkles className={`w-4 h-4 transition-all duration-300 ${isSending ? 'animate-pulse text-yellow-400' : 'group-hover:text-yellow-400 group-hover:scale-110'}`} />
+            <span>Отправить луч поддержки</span>
+          </button>
           
           {sparkles.map((sparkle) => (
             <span
