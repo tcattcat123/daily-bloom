@@ -14,19 +14,25 @@ const registerSchema = z.object({
   nickname: z.string().min(2, 'Минимум 2 символа').max(20, 'Максимум 20 символов'),
 });
 
-const loginSchema = z.object({
+const loginByNicknameSchema = z.object({
   nickname: z.string().min(2, 'Минимум 2 символа'),
+  password: z.string().min(1, 'Введите пароль'),
+});
+
+const loginByEmailSchema = z.object({
+  email: z.string().email('Некорректный email'),
   password: z.string().min(1, 'Введите пароль'),
 });
 
 const Welcome = () => {
   const [isLogin, setIsLogin] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'nickname' | 'email'>('nickname');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, loginWithNickname } = useAuth();
+  const { register, login, loginWithNickname } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,14 +42,23 @@ const Welcome = () => {
 
     try {
       if (isLogin) {
-        const result = loginSchema.safeParse({ nickname: nickname.trim(), password });
-        if (!result.success) {
-          setError(result.error.errors[0].message);
-          setIsSubmitting(false);
-          return;
+        if (loginMethod === 'nickname') {
+          const result = loginByNicknameSchema.safeParse({ nickname: nickname.trim(), password });
+          if (!result.success) {
+            setError(result.error.errors[0].message);
+            setIsSubmitting(false);
+            return;
+          }
+          await loginWithNickname(nickname.trim(), password);
+        } else {
+          const result = loginByEmailSchema.safeParse({ email, password });
+          if (!result.success) {
+            setError(result.error.errors[0].message);
+            setIsSubmitting(false);
+            return;
+          }
+          await login(email, password);
         }
-
-        await loginWithNickname(nickname.trim(), password);
         navigate('/');
       } else {
         const result = registerSchema.safeParse({ email, password, nickname: nickname.trim() });
@@ -54,17 +69,15 @@ const Welcome = () => {
         }
 
         await register(email, password, nickname.trim());
-        // После регистрации пользователь будет автоматически залогинен
         navigate('/');
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка';
       
-      // Friendly error messages
       if (errorMessage.includes('User already registered')) {
         setError('Пользователь с таким email уже существует');
       } else if (errorMessage.includes('Invalid login credentials')) {
-        setError('Неверный никнейм или пароль');
+        setError(loginMethod === 'nickname' ? 'Неверный никнейм или пароль' : 'Неверный email или пароль');
       } else if (errorMessage.includes('Пользователь не найден')) {
         setError('Пользователь с таким никнеймом не найден');
       } else {
@@ -110,32 +123,62 @@ const Welcome = () => {
           <h2 className="text-xl font-semibold text-white mb-1">
             {isLogin ? 'Вход в аккаунт' : 'Создать аккаунт'}
           </h2>
-          <p className="text-sm text-white/40 mb-8">
+          <p className="text-sm text-white/40 mb-6">
             {isLogin 
               ? 'Введите данные для входа' 
               : 'Начните путь к дисциплине'}
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nickname field - always shown for login, shown for register */}
-            <div className="relative group">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-              <Input
-                type="text"
-                placeholder="Никнейм"
-                value={nickname}
-                onChange={(e) => {
-                  setNickname(e.target.value);
-                  setError('');
-                }}
-                className="h-14 text-base pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
-                maxLength={20}
-                autoFocus
-              />
+          {/* Login method toggle - only for login */}
+          {isLogin && (
+            <div className="flex gap-2 mb-6">
+              <button
+                type="button"
+                onClick={() => { setLoginMethod('nickname'); setError(''); }}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                  loginMethod === 'nickname'
+                    ? 'bg-white/10 text-white border border-white/20'
+                    : 'text-white/40 hover:text-white/60'
+                }`}
+              >
+                По нику
+              </button>
+              <button
+                type="button"
+                onClick={() => { setLoginMethod('email'); setError(''); }}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                  loginMethod === 'email'
+                    ? 'bg-white/10 text-white border border-white/20'
+                    : 'text-white/40 hover:text-white/60'
+                }`}
+              >
+                По email
+              </button>
             </div>
+          )}
 
-            {/* Email field - only for registration */}
-            {!isLogin && (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Nickname field - for login by nickname or registration */}
+            {(loginMethod === 'nickname' || !isLogin) && (
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+                <Input
+                  type="text"
+                  placeholder="Никнейм"
+                  value={nickname}
+                  onChange={(e) => {
+                    setNickname(e.target.value);
+                    setError('');
+                  }}
+                  className="h-14 text-base pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
+                  maxLength={20}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            {/* Email field - for login by email or registration */}
+            {(loginMethod === 'email' || !isLogin) && (
               <div className="relative group">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
                 <Input
@@ -147,6 +190,7 @@ const Welcome = () => {
                     setError('');
                   }}
                   className="h-14 text-base pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
+                  autoFocus={isLogin && loginMethod === 'email'}
                 />
               </div>
             )}
@@ -172,7 +216,13 @@ const Welcome = () => {
             <Button 
               type="submit" 
               className="w-full h-14 text-base font-semibold gap-2 bg-white text-black hover:bg-white/90 rounded-xl mt-6 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
-              disabled={isSubmitting || !nickname.trim() || !password || (!isLogin && !email)}
+              disabled={
+                isSubmitting || 
+                !password || 
+                (isLogin && loginMethod === 'nickname' && !nickname.trim()) ||
+                (isLogin && loginMethod === 'email' && !email) ||
+                (!isLogin && (!nickname.trim() || !email))
+              }
             >
               {isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
