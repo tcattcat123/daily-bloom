@@ -8,6 +8,7 @@ import PersonalStandardCard from "@/components/PersonalStandardCard";
 import PillTrackerCard from "@/components/PillTrackerCard";
 import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
+import SupportRayButton from "@/components/SupportRayButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
@@ -152,6 +153,8 @@ const Index = () => {
         </div>
 
         <div className="hidden sm:flex items-center gap-1.5">
+          {/* Support Ray Button */}
+          <SupportRayButton />
           {/* Desktop Start Button */}
           <Button
             variant="default"

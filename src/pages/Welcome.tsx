@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Sparkles, ArrowRight, Mail, Lock, User } from 'lucide-react';
 import { z } from 'zod';
 import FloatingNicknames from '@/components/FloatingNicknames';
+import SupportRayButton from '@/components/SupportRayButton';
 
 const registerSchema = z.object({
   email: z.string().email('Некорректный email'),
@@ -196,8 +197,13 @@ const Welcome = () => {
           </div>
         </div>
 
+        {/* Support Ray Button */}
+        <div className="mt-6 text-center animate-fade-in" style={{ animationDelay: '0.15s' }}>
+          <SupportRayButton variant="welcome" />
+        </div>
+
         {/* Telegram link */}
-        <div className="mt-8 text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <div className="mt-6 text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <p className="text-white/40 text-xs mb-2">
             Вопросы и пожелания оставляйте в Telegram
           </p>
