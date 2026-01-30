@@ -167,6 +167,7 @@ export function useAuth() {
     isAuthenticated: !!session,
     register,
     login,
+    loginWithNickname,
     logout,
     updateNickname,
   };
