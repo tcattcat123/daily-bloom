@@ -14,12 +14,12 @@ interface RitualCardProps {
 
 // Motivational messages for each completed ritual
 const MOTIVATIONAL_MESSAGES = [
-  { text: "Отличное начало! 🔥", icon: Zap, color: "text-amber-500" },
-  { text: "Ты на волне! ⚡", icon: Star, color: "text-yellow-500" },
-  { text: "Сила в тебе! 💪", icon: Heart, color: "text-pink-500" },
-  { text: "Невероятный прогресс! ✨", icon: Sparkles, color: "text-purple-500" },
-  { text: "Легенда просыпается! 🏆", icon: Trophy, color: "text-amber-600" },
-  { text: "Ты — машина! 🚀", icon: Zap, color: "text-blue-500" },
+  { text: "Отличное начало! Ты молодец, продолжай! 🔥", icon: Zap, color: "text-amber-500" },
+  { text: "Ты на волне! Так держать! ⚡", icon: Star, color: "text-yellow-500" },
+  { text: "Сила в тебе! Ещё чуть-чуть! 💪", icon: Heart, color: "text-pink-500" },
+  { text: "Невероятно! Не останавливайся! ✨", icon: Sparkles, color: "text-purple-500" },
+  { text: "Легенда! Ты почти у цели! 🏆", icon: Trophy, color: "text-amber-600" },
+  { text: "Ты — машина! Финишируй! 🚀", icon: Zap, color: "text-blue-500" },
 ];
 
 const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: RitualCardProps) => {
@@ -109,21 +109,42 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
       {/* Motivational message - shows after each completion */}
       {currentMotivation && !isComplete && (
         <div className="mt-2 pt-2 border-t border-border/30 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center gap-1.5">
-            <currentMotivation.icon className={`w-3 h-3 ${currentMotivation.color}`} />
-            <span className={`text-[10px] font-bold ${currentMotivation.color}`}>
-              {currentMotivation.text}
-            </span>
-            <span className="text-[9px] text-muted-foreground ml-auto">
-              {completedCount}/{rituals.length}
-            </span>
-          </div>
-          {/* Mini progress bar */}
-          <div className="mt-1 h-1 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-habit-green transition-all duration-500 rounded-full"
-              style={{ width: `${progressPercent}%` }}
-            />
+          <div className="flex items-center gap-2">
+            {/* Circular progress */}
+            <div className="relative w-8 h-8 flex-shrink-0">
+              <svg className="transform -rotate-90" width={32} height={32}>
+                <circle
+                  className="text-muted"
+                  strokeWidth={3}
+                  stroke="currentColor"
+                  fill="transparent"
+                  r={12}
+                  cx={16}
+                  cy={16}
+                />
+                <circle
+                  className="text-habit-green transition-all duration-500"
+                  strokeWidth={3}
+                  strokeDasharray={12 * 2 * Math.PI}
+                  strokeDashoffset={12 * 2 * Math.PI - (progressPercent / 100) * 12 * 2 * Math.PI}
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="transparent"
+                  r={12}
+                  cx={16}
+                  cy={16}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-[8px] font-bold text-foreground">{completedCount}/{rituals.length}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 flex-1">
+              <currentMotivation.icon className={`w-3 h-3 ${currentMotivation.color}`} />
+              <span className={`text-[10px] font-bold ${currentMotivation.color}`}>
+                {currentMotivation.text}
+              </span>
+            </div>
           </div>
         </div>
       )}
