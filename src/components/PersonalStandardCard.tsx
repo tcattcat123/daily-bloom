@@ -136,8 +136,8 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: Person
       {currentQuote && (
         <div className="mt-2 pt-2 border-t border-border/30 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-start gap-2">
-            <currentQuote.icon className="w-3.5 h-3.5 text-ritual-gold flex-shrink-0 mt-0.5" />
-            <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic">
+            <currentQuote.icon className="w-4 h-4 text-ritual-gold flex-shrink-0 mt-0.5" />
+            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed italic">
               "{currentQuote.text}"
             </p>
           </div>

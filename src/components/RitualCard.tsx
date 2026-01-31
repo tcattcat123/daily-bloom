@@ -14,12 +14,12 @@ interface RitualCardProps {
 
 // Motivational messages for each completed ritual
 const MOTIVATIONAL_MESSAGES = [
-  { text: "Отличное начало! Ты молодец, продолжай! 🔥", icon: Zap, color: "text-amber-500" },
-  { text: "Ты на волне! Так держать! ⚡", icon: Star, color: "text-yellow-500" },
-  { text: "Сила в тебе! Ещё чуть-чуть! 💪", icon: Heart, color: "text-pink-500" },
-  { text: "Невероятно! Не останавливайся! ✨", icon: Sparkles, color: "text-purple-500" },
-  { text: "Легенда! Ты почти у цели! 🏆", icon: Trophy, color: "text-amber-600" },
-  { text: "Ты — машина! Финишируй! 🚀", icon: Zap, color: "text-blue-500" },
+  { text: "Отличное начало! Ты молодец, продолжай! 🔥", icon: Zap },
+  { text: "Ты на волне! Так держать! ⚡", icon: Star },
+  { text: "Сила в тебе! Ещё чуть-чуть! 💪", icon: Heart },
+  { text: "Невероятно! Не останавливайся! ✨", icon: Sparkles },
+  { text: "Легенда! Ты почти у цели! 🏆", icon: Trophy },
+  { text: "Ты — машина! Финишируй! 🚀", icon: Zap },
 ];
 
 const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: RitualCardProps) => {
@@ -140,8 +140,8 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
               </div>
             </div>
             <div className="flex items-center gap-1.5 flex-1">
-              <currentMotivation.icon className={`w-3 h-3 ${currentMotivation.color}`} />
-              <span className={`text-[10px] font-bold ${currentMotivation.color}`}>
+              <currentMotivation.icon className="w-3.5 h-3.5 text-streak-orange flex-shrink-0" />
+              <span className="text-[11px] font-bold text-streak-orange">
                 {currentMotivation.text}
               </span>
             </div>
