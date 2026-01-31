@@ -128,7 +128,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
     );
   }
 
-  // Full variant for dashboard
+  // Full variant for dashboard - compact version
   if (variant === 'full') {
     return (
       <>
@@ -136,10 +136,10 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
           <button
             onClick={() => setIsDialogOpen(true)}
             disabled={isSending}
-            className="group relative inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-habit-green/5 border border-habit-green/20 text-habit-green/70 hover:text-habit-green hover:bg-habit-green/10 hover:border-habit-green/40 transition-all duration-300 text-sm font-medium disabled:opacity-50"
+            className="group relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-habit-green/5 border border-habit-green/20 text-habit-green/70 hover:text-habit-green hover:bg-habit-green/10 hover:border-habit-green/40 transition-all duration-300 text-xs font-medium disabled:opacity-50"
           >
-            <Sparkles className={`w-4 h-4 transition-all duration-300 ${isSending ? 'animate-pulse text-yellow-400' : 'group-hover:text-yellow-400 group-hover:scale-110'}`} />
-            <span>Отправить луч поддержки</span>
+            <Sparkles className={`w-3.5 h-3.5 transition-all duration-300 ${isSending ? 'animate-pulse text-yellow-400' : 'group-hover:text-yellow-400 group-hover:scale-110'}`} />
+            <span>Луч поддержки</span>
           </button>
           
           {sparkles.map((sparkle) => (
