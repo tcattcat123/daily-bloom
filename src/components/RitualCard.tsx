@@ -1,4 +1,4 @@
-import { Sun, Check } from "lucide-react";
+import { Sun, Check, Sparkles, Zap, Star, Heart, Trophy } from "lucide-react";
 
 interface Ritual {
   text: string;
@@ -9,9 +9,28 @@ interface RitualCardProps {
   rituals: Ritual[];
   onToggle: (index: number) => void;
   isComplete: boolean;
+  dailyPlanPercent?: number;
 }
 
-const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
+// Motivational messages for each completed ritual
+const MOTIVATIONAL_MESSAGES = [
+  { text: "Отличное начало! 🔥", icon: Zap, color: "text-amber-500" },
+  { text: "Ты на волне! ⚡", icon: Star, color: "text-yellow-500" },
+  { text: "Сила в тебе! 💪", icon: Heart, color: "text-pink-500" },
+  { text: "Невероятный прогресс! ✨", icon: Sparkles, color: "text-purple-500" },
+  { text: "Легенда просыпается! 🏆", icon: Trophy, color: "text-amber-600" },
+  { text: "Ты — машина! 🚀", icon: Zap, color: "text-blue-500" },
+];
+
+const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: RitualCardProps) => {
+  const completedCount = rituals.filter(r => r.done).length;
+  const progressPercent = rituals.length > 0 ? Math.round((completedCount / rituals.length) * 100) : 0;
+  
+  // Get current motivational message based on completed count
+  const currentMotivation = completedCount > 0 && completedCount <= MOTIVATIONAL_MESSAGES.length 
+    ? MOTIVATIONAL_MESSAGES[completedCount - 1] 
+    : null;
+
   return (
     <div className={`rounded-2xl p-3 transition-all duration-500 relative overflow-hidden ${
       isComplete 
@@ -34,10 +53,24 @@ const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
         </div>
       )}
       
-      <div className={`text-[10px] font-bold uppercase tracking-wider mb-2 relative z-10 ${
-        isComplete ? 'text-white/80' : 'text-muted-foreground'
-      }`}>
-        Утренний ритуал
+      {/* Header with title and daily plan percent */}
+      <div className="flex items-center justify-between mb-2 relative z-10">
+        <div className={`text-[10px] font-bold uppercase tracking-wider ${
+          isComplete ? 'text-white/80' : 'text-muted-foreground'
+        }`}>
+          Утренний ритуал
+        </div>
+        
+        {/* Daily plan percentage badge */}
+        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+          isComplete 
+            ? 'bg-white/20 text-white' 
+            : dailyPlanPercent >= 70 
+              ? 'bg-habit-green/10 text-habit-green' 
+              : 'bg-muted text-muted-foreground'
+        }`}>
+          <span>День: {dailyPlanPercent}%</span>
+        </div>
       </div>
       
       <div className="flex flex-col gap-1.5 relative z-10">
@@ -45,11 +78,11 @@ const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
           <div
             key={idx}
             onClick={() => onToggle(idx)}
-            className={`flex items-center gap-2 cursor-pointer transition-colors ${
+            className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ${
               ritual.done 
                 ? isComplete ? 'text-white' : 'text-foreground'
                 : isComplete ? 'text-white/70' : 'text-muted-foreground'
-            }`}
+            } ${ritual.done ? 'transform scale-[1.02]' : ''}`}
           >
             <button
               className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
@@ -66,18 +99,41 @@ const RitualCard = ({ rituals, onToggle, isComplete }: RitualCardProps) => {
                 <Check className={`w-2.5 h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'}`} />
               )}
             </button>
-            <span className="text-[11px] font-medium">
+            <span className={`text-[11px] font-medium ${ritual.done ? 'line-through opacity-70' : ''}`}>
               {ritual.text}
             </span>
           </div>
         ))}
       </div>
       
+      {/* Motivational message - shows after each completion */}
+      {currentMotivation && !isComplete && (
+        <div className="mt-2 pt-2 border-t border-border/30 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex items-center gap-1.5">
+            <currentMotivation.icon className={`w-3 h-3 ${currentMotivation.color}`} />
+            <span className={`text-[10px] font-bold ${currentMotivation.color}`}>
+              {currentMotivation.text}
+            </span>
+            <span className="text-[9px] text-muted-foreground ml-auto">
+              {completedCount}/{rituals.length}
+            </span>
+          </div>
+          {/* Mini progress bar */}
+          <div className="mt-1 h-1 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-habit-green transition-all duration-500 rounded-full"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      )}
+      
       {/* Completion celebration text */}
       {isComplete && (
         <div className="mt-2 pt-2 border-t border-white/20 relative z-10">
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] font-bold text-white/90">✨ Утро прошло идеально!</span>
+            <Trophy className="w-3 h-3 text-white" />
+            <span className="text-[10px] font-bold text-white">✨ Утро прошло идеально!</span>
           </div>
         </div>
       )}
