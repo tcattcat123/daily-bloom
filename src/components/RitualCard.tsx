@@ -37,39 +37,32 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
         ? 'bg-habit-green shadow-card-green' 
         : 'bg-card shadow-card border border-border/50'
     }`}>
-      {/* Animated sun background when complete */}
+      {/* Animated sun background when complete - improved */}
       {isComplete && (
-        <div className="absolute -top-6 -right-6 pointer-events-none">
-          <div className="relative">
-            {/* Pulsing glow */}
-            <div className="absolute inset-0 animate-pulse">
-              <Sun className="w-20 h-20 text-white/20" strokeWidth={1} />
+        <div className="absolute -top-4 -right-4 pointer-events-none">
+          <div className="relative w-24 h-24">
+            {/* Outer glow */}
+            <div className="absolute inset-0 rounded-full bg-white/10 blur-xl animate-pulse" />
+            {/* Middle pulsing ring */}
+            <div className="absolute inset-2 rounded-full border-4 border-white/20 animate-[ping_2s_ease-in-out_infinite]" />
+            {/* Inner rotating sun */}
+            <div className="absolute inset-0 flex items-center justify-center animate-[spin_30s_linear_infinite]">
+              <Sun className="w-16 h-16 text-white/40" strokeWidth={1.5} />
             </div>
-            {/* Rotating rays */}
-            <div className="animate-[spin_20s_linear_infinite]">
-              <Sun className="w-20 h-20 text-white/30" strokeWidth={1.5} />
+            {/* Center bright core */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-white/30 blur-sm animate-pulse" />
             </div>
           </div>
         </div>
       )}
       
-      {/* Header with title and daily plan percent */}
+      {/* Header with title only */}
       <div className="flex items-center justify-between mb-2 relative z-10">
         <div className={`text-[10px] font-bold uppercase tracking-wider ${
           isComplete ? 'text-white/80' : 'text-muted-foreground'
         }`}>
           Утренний ритуал
-        </div>
-        
-        {/* Daily plan percentage badge */}
-        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
-          isComplete 
-            ? 'bg-white/20 text-white' 
-            : dailyPlanPercent >= 70 
-              ? 'bg-habit-green/10 text-habit-green' 
-              : 'bg-muted text-muted-foreground'
-        }`}>
-          <span>День: {dailyPlanPercent}%</span>
         </div>
       </div>
       

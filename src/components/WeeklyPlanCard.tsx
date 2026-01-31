@@ -96,9 +96,7 @@ const WeeklyPlanCard = ({
       </div>
       
       <div className="flex items-start gap-3">
-        {/* Main circular progress */}
-        <CircularProgress value={planPercent} size={52} strokeWidth={4} />
-        
+        {/* Left side - stats and chart */}
         <div className="flex-1 min-w-0">
           {/* Stats row */}
           <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -167,6 +165,9 @@ const WeeklyPlanCard = ({
             ))}
           </div>
         </div>
+        
+        {/* Right side - circular progress */}
+        <CircularProgress value={planPercent} size={52} strokeWidth={4} />
       </div>
       
       {/* Motivational message with sparkle */}
