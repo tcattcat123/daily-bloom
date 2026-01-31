@@ -187,6 +187,7 @@ const Index = () => {
           rituals={rituals}
           onToggle={toggleRitual}
           isComplete={allRitualsDone}
+          dailyPlanPercent={planPercent}
         />
 
         {/* Weekly Plan Card with mini charts */}
