@@ -1,4 +1,22 @@
-import { Plus, Trophy, Check } from "lucide-react";
+import { Plus, Trophy, Check, Flame, Target, Zap, Mountain, Star } from "lucide-react";
+
+// Motivational quotes for personal development
+const MOTIVATIONAL_QUOTES = [
+  { text: "Сложно — не значит невозможно.", icon: Mountain },
+  { text: "Тот, кто каждый день делает хотя бы шаг, однажды окажется там, где другие даже не начинали.", icon: Target },
+  { text: "Слабый может стать сильным. Ленивый — никогда.", icon: Flame },
+  { text: "Взлетает лишь тот, кто не жалеет сил на разбег.", icon: Zap },
+  { text: "Побеждает не самый талантливый, а тот, кто продолжает, когда все уже сдались.", icon: Trophy },
+  { text: "Боль проходит. Сожаление о том, что ты не попробовал — остаётся навсегда.", icon: Star },
+  { text: "Ты либо находишь причину, либо находишь путь. Третьего не дано.", icon: Target },
+  { text: "Самое тёмное время суток — перед самым рассветом. Продержись ещё чуть-чуть.", icon: Mountain },
+  { text: "Не жди идеального момента. Он наступит тогда, когда ты начнёшь действовать.", icon: Zap },
+  { text: "Тот, кто боится проиграть — уже проиграл. Тот, кто боится не начать — проиграет дважды.", icon: Flame },
+  { text: "Твоя следующая победа скрывается за тем самым страхом, который ты сейчас избегаешь.", icon: Trophy },
+  { text: "Уровень твоей жизни = уровень твоей дисциплины, когда никто не смотрит.", icon: Star },
+  { text: "Мечты не имеют срока годности. Бери и делай, пока жив.", icon: Flame },
+  { text: "Ты не устал — ты просто ещё не разозлился по-настоящему.", icon: Zap },
+];
 
 interface PersonalStandardCardProps {
   habits: string[];
@@ -11,6 +29,13 @@ interface PersonalStandardCardProps {
 const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: PersonalStandardCardProps) => {
   const dayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const todayIndex = (new Date().getDay() + 6) % 7;
+
+  // Calculate total completed habits
+  const totalCompleted = weekData.reduce((sum, day) => sum + day.completedIndices.length, 0);
+  
+  // Show quote after every 2nd completion (quoteIndex is 0-based, so we check >= 2)
+  const quoteIndex = totalCompleted >= 2 ? Math.floor((totalCompleted - 1) / 2) % MOTIVATIONAL_QUOTES.length : -1;
+  const currentQuote = quoteIndex >= 0 ? MOTIVATIONAL_QUOTES[quoteIndex] : null;
 
   const getHabitProgress = (habitIndex: number) => {
     const completed = weekData.filter(day => 
@@ -106,6 +131,18 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: Person
           </tbody>
         </table>
       </div>
+
+      {/* Motivational quote - shows after every 2nd completion */}
+      {currentQuote && (
+        <div className="mt-2 pt-2 border-t border-border/30 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="flex items-start gap-2">
+            <currentQuote.icon className="w-3.5 h-3.5 text-ritual-gold flex-shrink-0 mt-0.5" />
+            <p className="text-[9px] font-medium text-muted-foreground leading-relaxed italic">
+              "{currentQuote.text}"
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
