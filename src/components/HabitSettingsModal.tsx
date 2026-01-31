@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Check } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useTheme } from "next-themes";
 
 interface PillItem {
   name: string;
@@ -47,6 +48,37 @@ interface HabitSettingsModalProps {
   onResetWeek: () => void;
   onLogout: () => void;
 }
+
+// Theme toggle component
+const ThemeToggleSection = () => {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <div>
+      <Label className="text-sm font-medium mb-2 block">Тема оформления</Label>
+      <div className="flex gap-2">
+        <Button
+          variant={theme === "light" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setTheme("light")}
+          className="flex-1 gap-2"
+        >
+          <Sun className="w-4 h-4" />
+          Светлая
+        </Button>
+        <Button
+          variant={theme === "dark" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setTheme("dark")}
+          className="flex-1 gap-2"
+        >
+          <Moon className="w-4 h-4" />
+          Тёмная
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 const HabitSettingsModal = ({ 
   open, 
@@ -412,6 +444,10 @@ const HabitSettingsModal = ({
 
           {/* Other Settings Tab */}
           <TabsContent value="other" className="mt-4">
+            <ThemeToggleSection />
+            
+            <Separator className="my-4" />
+            
             <div className="flex flex-col gap-4">
               {/* Layout Toggle */}
               <div>
