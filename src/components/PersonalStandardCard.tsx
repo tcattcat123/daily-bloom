@@ -26,6 +26,14 @@ interface PersonalStandardCardProps {
   compact?: boolean;
 }
 
+// Get dot status for a day: 'full' (all done), 'partial' (≥2 done), 'empty' (< 2 done)
+const getDotStatus = (completedCount: number, totalHabits: number): 'full' | 'partial' | 'empty' => {
+  if (totalHabits === 0) return 'empty';
+  if (completedCount >= totalHabits) return 'full';
+  if (completedCount >= 2) return 'partial';
+  return 'empty';
+};
+
 const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: PersonalStandardCardProps) => {
   const dayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const todayIndex = (new Date().getDay() + 6) % 7;
@@ -143,6 +151,50 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: Person
           </div>
         </div>
       )}
+
+      {/* Daily streak dots - chain of progress */}
+      <div className="mt-3 pt-2 border-t border-border/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            {weekData.map((day, idx) => {
+              const completedCount = day.completedIndices.length;
+              const status = getDotStatus(completedCount, habits.length);
+              const isToday = idx === todayIndex;
+              
+              return (
+                <div
+                  key={idx}
+                  className={`relative transition-all duration-300 ${
+                    isToday ? 'scale-125' : ''
+                  }`}
+                  title={`${day.name}: ${completedCount}/${habits.length}`}
+                >
+                  <div
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                      status === 'full'
+                        ? 'bg-habit-green shadow-[0_0_6px_rgba(34,197,94,0.6)]'
+                        : status === 'partial'
+                        ? 'bg-habit-green/40'
+                        : 'bg-muted-foreground/20'
+                    }`}
+                  />
+                  {isToday && (
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0.5 h-0.5 rounded-full bg-foreground/50" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Streak counter */}
+          <div className="flex items-center gap-1">
+            <Flame className="w-3 h-3 text-streak-orange" />
+            <span className="text-[10px] font-bold text-muted-foreground">
+              {weekData.filter(day => getDotStatus(day.completedIndices.length, habits.length) !== 'empty').length} дн.
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
