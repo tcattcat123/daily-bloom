@@ -22,6 +22,7 @@ interface DayData {
   name: string;
   dateStr: string;
   completedIndices: number[];
+  enabledHabits?: number[]; // Which habits are enabled for this day
 }
 
 interface UserDataState {
@@ -137,8 +138,15 @@ export function useUserData() {
       weekData: prev.weekData.map((day) => ({
         ...day,
         completedIndices: day.completedIndices.filter((i) => i < habits.length),
+        enabledHabits: day.enabledHabits 
+          ? day.enabledHabits.filter((i) => i < habits.length)
+          : habits.map((_, i) => i),
       })),
     }));
+  }, []);
+
+  const setWeekData = useCallback((weekData: DayData[]) => {
+    setState((prev) => ({ ...prev, weekData }));
   }, []);
 
   const toggleHabit = useCallback((dayIdx: number, habitIdx: number) => {
@@ -236,6 +244,7 @@ export function useUserData() {
     toggleRitual,
     setHabits,
     toggleHabit,
+    setWeekData,
     setPersonalHabits,
     togglePersonalHabit,
     setPills,

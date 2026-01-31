@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface PillItem {
   name: string;
@@ -19,6 +20,13 @@ interface RitualItem {
   done: boolean;
 }
 
+interface DayData {
+  name: string;
+  dateStr: string;
+  completedIndices: number[];
+  enabledHabits?: number[]; // Which habits are enabled for this day
+}
+
 interface HabitSettingsModalProps {
   open: boolean;
   onClose: () => void;
@@ -28,12 +36,14 @@ interface HabitSettingsModalProps {
   pills: PillItem[];
   pillsEnabled: boolean;
   layout: "vertical" | "horizontal";
+  weekData: DayData[];
   onSaveHabits: (habits: string[]) => void;
   onSavePersonalHabits: (habits: string[]) => void;
   onSaveRituals: (rituals: RitualItem[]) => void;
   onSavePills: (pills: PillItem[]) => void;
   onTogglePills: (enabled: boolean) => void;
   onSetLayout: (layout: "vertical" | "horizontal") => void;
+  onSaveWeekData: (weekData: DayData[]) => void;
   onResetWeek: () => void;
   onLogout: () => void;
 }
@@ -47,12 +57,14 @@ const HabitSettingsModal = ({
   pills,
   pillsEnabled,
   layout,
+  weekData,
   onSaveHabits, 
   onSavePersonalHabits,
   onSaveRituals,
   onSavePills,
   onTogglePills,
   onSetLayout,
+  onSaveWeekData,
   onResetWeek,
   onLogout
 }: HabitSettingsModalProps) => {
@@ -62,11 +74,15 @@ const HabitSettingsModal = ({
   const [localPills, setLocalPills] = useState<PillItem[]>(pills);
   const [localPillsEnabled, setLocalPillsEnabled] = useState(pillsEnabled);
   const [localLayout, setLocalLayout] = useState(layout);
+  const [localWeekData, setLocalWeekData] = useState<DayData[]>(weekData);
   const [newHabit, setNewHabit] = useState("");
   const [newPersonalHabit, setNewPersonalHabit] = useState("");
   const [newRitual, setNewRitual] = useState("");
   const [newPillName, setNewPillName] = useState("");
   const [newPillTime, setNewPillTime] = useState("утро");
+  const [selectedDay, setSelectedDay] = useState(0);
+
+  const dayShortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
   useEffect(() => {
     if (open) {
@@ -76,12 +92,23 @@ const HabitSettingsModal = ({
       setLocalPills(pills);
       setLocalPillsEnabled(pillsEnabled);
       setLocalLayout(layout);
+      // Initialize enabledHabits if not present
+      setLocalWeekData(weekData.map((day, idx) => ({
+        ...day,
+        enabledHabits: day.enabledHabits ?? habits.map((_, i) => i)
+      })));
     }
-  }, [open, habits, personalHabits, rituals, pills, pillsEnabled, layout]);
+  }, [open, habits, personalHabits, rituals, pills, pillsEnabled, layout, weekData]);
 
   const handleAddHabit = () => {
     if (newHabit.trim()) {
-      setLocalHabits([...localHabits, newHabit.trim()]);
+      const newHabitsList = [...localHabits, newHabit.trim()];
+      setLocalHabits(newHabitsList);
+      // Add new habit to all days by default
+      setLocalWeekData(prev => prev.map(day => ({
+        ...day,
+        enabledHabits: [...(day.enabledHabits || []), newHabitsList.length - 1]
+      })));
       setNewHabit("");
     }
   };
@@ -107,6 +134,32 @@ const HabitSettingsModal = ({
     }
   };
 
+  const handleRemoveHabit = (idx: number) => {
+    const newHabitsList = localHabits.filter((_, i) => i !== idx);
+    setLocalHabits(newHabitsList);
+    // Update enabledHabits to remove references to deleted habit and reindex
+    setLocalWeekData(prev => prev.map(day => ({
+      ...day,
+      enabledHabits: (day.enabledHabits || [])
+        .filter(i => i !== idx)
+        .map(i => i > idx ? i - 1 : i),
+      completedIndices: day.completedIndices
+        .filter(i => i !== idx)
+        .map(i => i > idx ? i - 1 : i)
+    })));
+  };
+
+  const toggleHabitForDay = (dayIdx: number, habitIdx: number) => {
+    setLocalWeekData(prev => prev.map((day, idx) => {
+      if (idx !== dayIdx) return day;
+      const enabled = day.enabledHabits || [];
+      if (enabled.includes(habitIdx)) {
+        return { ...day, enabledHabits: enabled.filter(i => i !== habitIdx) };
+      }
+      return { ...day, enabledHabits: [...enabled, habitIdx].sort((a, b) => a - b) };
+    }));
+  };
+
   const handleSave = () => {
     onSaveHabits(localHabits);
     onSavePersonalHabits(localPersonalHabits);
@@ -114,6 +167,7 @@ const HabitSettingsModal = ({
     onSavePills(localPills);
     onTogglePills(localPillsEnabled);
     onSetLayout(localLayout);
+    onSaveWeekData(localWeekData);
     onClose();
   };
 
@@ -186,37 +240,79 @@ const HabitSettingsModal = ({
           {/* Work Habits Tab */}
           <TabsContent value="work" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
-              Привычки для рабочего графика (дни недели)
+              Настройте привычки для каждого дня недели
             </p>
-            <div className="flex flex-col gap-2">
-              {localHabits.map((habit, idx) => (
-                <div key={idx} className="flex items-center gap-2 group">
-                  <div className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm">
-                    {habit}
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-8 w-8"
-                    onClick={() => setLocalHabits(localHabits.filter((_, i) => i !== idx))}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+            
+            {/* Day selector */}
+            <div className="flex gap-1 mb-4">
+              {dayShortNames.map((day, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedDay(idx)}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+                    selectedDay === idx
+                      ? 'bg-habit-green text-white'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {day}
+                </button>
               ))}
-              
-              <div className="flex items-center gap-2 mt-2">
-                <Input
-                  placeholder="Новая рабочая привычка..."
-                  value={newHabit}
-                  onChange={(e) => setNewHabit(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
-                  className="flex-1"
-                />
-                <Button onClick={handleAddHabit} size="icon" variant="outline">
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </div>
+            </div>
+
+            {/* Habits list with checkboxes for selected day */}
+            <div className="flex flex-col gap-2 mb-4">
+              <Label className="text-xs text-muted-foreground">
+                Задачи на {localWeekData[selectedDay]?.name || dayShortNames[selectedDay]}:
+              </Label>
+              {localHabits.length === 0 ? (
+                <p className="text-xs text-muted-foreground/60 italic py-2">
+                  Добавьте привычки ниже
+                </p>
+              ) : (
+                localHabits.map((habit, idx) => {
+                  const isEnabled = localWeekData[selectedDay]?.enabledHabits?.includes(idx) ?? true;
+                  return (
+                    <div key={idx} className="flex items-center gap-2 group">
+                      <Checkbox
+                        checked={isEnabled}
+                        onCheckedChange={() => toggleHabitForDay(selectedDay, idx)}
+                        className="data-[state=checked]:bg-habit-green data-[state=checked]:border-habit-green"
+                      />
+                      <div className={`flex-1 px-3 py-2 rounded-lg text-sm transition-opacity ${
+                        isEnabled ? 'bg-muted' : 'bg-muted/50 text-muted-foreground/60'
+                      }`}>
+                        {habit}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-8 w-8"
+                        onClick={() => handleRemoveHabit(idx)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <Separator className="my-3" />
+            
+            {/* Add new habit */}
+            <Label className="text-xs text-muted-foreground mb-2 block">Добавить новую привычку:</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Новая рабочая привычка..."
+                value={newHabit}
+                onChange={(e) => setNewHabit(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
+                className="flex-1"
+              />
+              <Button onClick={handleAddHabit} size="icon" variant="outline">
+                <Plus className="w-4 h-4" />
+              </Button>
             </div>
           </TabsContent>
           

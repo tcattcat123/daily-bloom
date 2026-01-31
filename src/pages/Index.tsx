@@ -36,6 +36,7 @@ const Index = () => {
     togglePill,
     setPillsEnabled,
     setLayout,
+    setWeekData,
     resetWeek,
     clearAllData,
   } = useUserData();
@@ -223,8 +224,12 @@ const Index = () => {
       {layout === "vertical" ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 overflow-x-auto pb-4">
           {weekData.map((day, dayIdx) => {
-            const dayProgress = habits.length > 0 
-              ? Math.round((day.completedIndices.length / habits.length) * 100) 
+            // Get enabled habits for this day (default to all if not set)
+            const enabledHabits = day.enabledHabits ?? habits.map((_, i) => i);
+            const enabledCount = enabledHabits.length;
+            const completedCount = day.completedIndices.filter(i => enabledHabits.includes(i)).length;
+            const dayProgress = enabledCount > 0 
+              ? Math.round((completedCount / enabledCount) * 100) 
               : 0;
             
             return (
@@ -243,6 +248,9 @@ const Index = () => {
                   </div>
                 </div>
                 {habits.map((habit, hIdx) => {
+                  // Only show habits enabled for this day
+                  if (!enabledHabits.includes(hIdx)) return null;
+                  
                   const isDone = day.completedIndices.includes(hIdx);
                   return (
                     <button
@@ -280,8 +288,12 @@ const Index = () => {
       ) : (
         <div className="flex flex-col gap-2">
           {weekData.map((day, dayIdx) => {
-            const count = day.completedIndices.length;
-            const isFull = count === habits.length;
+            // Get enabled habits for this day
+            const enabledHabits = day.enabledHabits ?? habits.map((_, i) => i);
+            const enabledCount = enabledHabits.length;
+            const completedCount = day.completedIndices.filter(i => enabledHabits.includes(i)).length;
+            const isFull = completedCount === enabledCount && enabledCount > 0;
+            
             return (
               <div
                 key={dayIdx}
@@ -299,6 +311,9 @@ const Index = () => {
                 </div>
                 <div className="flex flex-wrap gap-1.5 flex-1">
                   {habits.map((habit, hIdx) => {
+                    // Only show habits enabled for this day
+                    if (!enabledHabits.includes(hIdx)) return null;
+                    
                     const isDone = day.completedIndices.includes(hIdx);
                     return (
                       <button
@@ -320,7 +335,7 @@ const Index = () => {
                     isFull ? "text-habit-green" : "text-muted-foreground"
                   }`}
                 >
-                  {count}/{habits.length}
+                  {completedCount}/{enabledCount}
                 </div>
               </div>
             );
@@ -338,12 +353,14 @@ const Index = () => {
         pills={pills}
         pillsEnabled={pillsEnabled}
         layout={layout}
+        weekData={weekData}
         onSaveHabits={setHabits}
         onSavePersonalHabits={setPersonalHabits}
         onSaveRituals={setRituals}
         onSavePills={setPills}
         onTogglePills={setPillsEnabled}
         onSetLayout={setLayout}
+        onSaveWeekData={setWeekData}
         onResetWeek={resetWeek}
         onLogout={logout}
       />
