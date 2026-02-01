@@ -10,6 +10,7 @@ import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
 import SupportRayButton from "@/components/SupportRayButton";
 import SupportRayNotifications from "@/components/SupportRayNotifications";
+import CalendarCard from "@/components/CalendarCard";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
@@ -22,6 +23,8 @@ const Index = () => {
     personalHabits,
     pills,
     pillsEnabled,
+    calendarEnabled,
+    calendarEvents,
     weekData,
     personalWeekData,
     layout,
@@ -36,6 +39,9 @@ const Index = () => {
     setPills,
     togglePill,
     setPillsEnabled,
+    setCalendarEnabled,
+    addCalendarEvent,
+    removeCalendarEvent,
     setLayout,
     setWeekData,
     resetWeek,
@@ -344,6 +350,17 @@ const Index = () => {
         </div>
       )}
 
+      {/* Calendar Section */}
+      {calendarEnabled && (
+        <div className="mt-5">
+          <CalendarCard
+            events={calendarEvents}
+            onAddEvent={addCalendarEvent}
+            onRemoveEvent={removeCalendarEvent}
+          />
+        </div>
+      )}
+
       {/* Settings Modal */}
       <HabitSettingsModal
         open={settingsOpen}
@@ -353,6 +370,7 @@ const Index = () => {
         rituals={rituals}
         pills={pills}
         pillsEnabled={pillsEnabled}
+        calendarEnabled={calendarEnabled}
         layout={layout}
         weekData={weekData}
         statistics={statistics}
@@ -361,6 +379,7 @@ const Index = () => {
         onSaveRituals={setRituals}
         onSavePills={setPills}
         onTogglePills={setPillsEnabled}
+        onToggleCalendar={setCalendarEnabled}
         onSetLayout={setLayout}
         onSaveWeekData={setWeekData}
         onResetWeek={resetWeek}

@@ -35,12 +35,22 @@ interface Statistics {
   longestStreak: number;
 }
 
+export interface CalendarEvent {
+  id: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  time?: string;
+  color: 'green' | 'blue' | 'yellow' | 'orange' | 'gray';
+}
+
 interface UserDataState {
   rituals: Ritual[];
   habits: string[];
   personalHabits: string[];
   pills: Pill[];
   pillsEnabled: boolean;
+  calendarEnabled: boolean;
+  calendarEvents: CalendarEvent[];
   weekData: DayData[];
   personalWeekData: DayData[];
   layout: 'vertical' | 'horizontal';
@@ -90,6 +100,8 @@ const getDefaultState = (): UserDataState => ({
   personalHabits: [...DEFAULT_PERSONAL_HABITS],
   pills: DEFAULT_PILLS.map((p) => ({ ...p, done: false })),
   pillsEnabled: false,
+  calendarEnabled: true,
+  calendarEvents: [],
   weekData: generateWeek(),
   personalWeekData: generateWeek(),
   layout: 'vertical',
@@ -281,6 +293,29 @@ export function useUserData() {
     setState((prev) => ({ ...prev, pillsEnabled: enabled }));
   }, []);
 
+  // Calendar
+  const setCalendarEnabled = useCallback((enabled: boolean) => {
+    setState((prev) => ({ ...prev, calendarEnabled: enabled }));
+  }, []);
+
+  const addCalendarEvent = useCallback((event: Omit<CalendarEvent, 'id'>) => {
+    const newEvent: CalendarEvent = {
+      ...event,
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
+    setState((prev) => ({
+      ...prev,
+      calendarEvents: [...prev.calendarEvents, newEvent],
+    }));
+  }, []);
+
+  const removeCalendarEvent = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      calendarEvents: prev.calendarEvents.filter((e) => e.id !== id),
+    }));
+  }, []);
+
   // Layout
   const setLayout = useCallback((layout: 'vertical' | 'horizontal') => {
     setState((prev) => ({ ...prev, layout }));
@@ -305,6 +340,8 @@ export function useUserData() {
       personalHabits: [],
       pills: [],
       pillsEnabled: false,
+      calendarEnabled: true,
+      calendarEvents: [],
       weekData: generateWeek(),
       personalWeekData: generateWeek(),
       layout: 'vertical',
@@ -326,6 +363,9 @@ export function useUserData() {
     setPills,
     togglePill,
     setPillsEnabled,
+    setCalendarEnabled,
+    addCalendarEvent,
+    removeCalendarEvent,
     setLayout,
     resetWeek,
     clearAllData,
