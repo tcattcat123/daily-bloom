@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Plus, Trash2, X, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarEvent } from "@/hooks/useUserData";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CalendarCardProps {
   events: CalendarEvent[];
@@ -33,12 +34,15 @@ const getColorClass = (color: CalendarEvent['color']) => {
 };
 
 const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) => {
+  const isMobile = useIsMobile();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventTime, setNewEventTime] = useState("");
   const [newEventColor, setNewEventColor] = useState<CalendarEvent['color']>('green');
+  
+  const maxVisibleEvents = isMobile ? 2 : 12;
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -154,7 +158,7 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
               {/* Event titles */}
               {dayEvents.length > 0 && (
                 <div className="flex flex-col gap-0.5 mt-0.5 w-full overflow-hidden">
-                  {dayEvents.slice(0, 2).map((event) => (
+                  {dayEvents.slice(0, maxVisibleEvents).map((event) => (
                     <div
                       key={event.id}
                       className={`text-[9px] leading-tight px-1 py-0.5 rounded truncate ${getColorClass(event.color)}`}
@@ -163,8 +167,8 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
                       {event.title}
                     </div>
                   ))}
-                  {dayEvents.length > 2 && (
-                    <span className="text-[9px] text-muted-foreground text-center">+{dayEvents.length - 2}</span>
+                  {dayEvents.length > maxVisibleEvents && (
+                    <span className="text-[9px] text-muted-foreground text-center">+{dayEvents.length - maxVisibleEvents}</span>
                   )}
                 </div>
               )}
