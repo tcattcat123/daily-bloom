@@ -76,6 +76,11 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
     setSelectedDate(date);
   };
 
+  const handleDayDoubleClick = (date: Date) => {
+    setSelectedDate(date);
+    setIsAddModalOpen(true);
+  };
+
   const handleAddEvent = () => {
     if (!selectedDate || !newEventTitle.trim()) return;
     
@@ -134,6 +139,7 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
             <button
               key={idx}
               onClick={() => handleDayClick(date)}
+              onDoubleClick={() => handleDayDoubleClick(date)}
               className={`
                 relative aspect-square flex flex-col items-center justify-start p-1 rounded-lg transition-all text-xs
                 ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/50'}
