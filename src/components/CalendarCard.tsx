@@ -307,12 +307,41 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
               <label className="text-xs font-medium text-muted-foreground mb-2 block">
                 Время (опционально)
               </label>
-              <Input
-                type="time"
-                value={newEventTime}
-                onChange={(e) => setNewEventTime(e.target.value)}
-                className="rounded-xl border-border/50 focus:border-habit-green/50 transition-colors"
-              />
+              <div className="flex gap-2 items-center">
+                <select
+                  value={newEventTime ? newEventTime.split(':')[0] : ''}
+                  onChange={(e) => {
+                    const hour = e.target.value;
+                    if (hour) {
+                      const minute = newEventTime ? newEventTime.split(':')[1] : '00';
+                      setNewEventTime(`${hour}:${minute}`);
+                    } else {
+                      setNewEventTime('');
+                    }
+                  }}
+                  className="flex-1 h-10 rounded-xl border border-border/50 bg-background px-3 text-sm focus:border-habit-green/50 focus:outline-none transition-colors"
+                >
+                  <option value="">--</option>
+                  {Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0')).map(h => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+                <span className="text-muted-foreground">:</span>
+                <select
+                  value={newEventTime ? newEventTime.split(':')[1] : ''}
+                  onChange={(e) => {
+                    const minute = e.target.value;
+                    const hour = newEventTime ? newEventTime.split(':')[0] : '09';
+                    setNewEventTime(`${hour}:${minute}`);
+                  }}
+                  className="flex-1 h-10 rounded-xl border border-border/50 bg-background px-3 text-sm focus:border-habit-green/50 focus:outline-none transition-colors"
+                >
+                  <option value="">--</option>
+                  {['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             
             <div>
