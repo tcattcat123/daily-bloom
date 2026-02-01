@@ -46,6 +46,7 @@ interface HabitSettingsModalProps {
   rituals: RitualItem[];
   pills: PillItem[];
   pillsEnabled: boolean;
+  calendarEnabled: boolean;
   layout: "vertical" | "horizontal";
   weekData: DayData[];
   statistics?: Statistics;
@@ -54,6 +55,7 @@ interface HabitSettingsModalProps {
   onSaveRituals: (rituals: RitualItem[]) => void;
   onSavePills: (pills: PillItem[]) => void;
   onTogglePills: (enabled: boolean) => void;
+  onToggleCalendar: (enabled: boolean) => void;
   onSetLayout: (layout: "vertical" | "horizontal") => void;
   onSaveWeekData: (weekData: DayData[]) => void;
   onResetWeek: () => void;
@@ -163,6 +165,7 @@ const HabitSettingsModal = ({
   rituals,
   pills,
   pillsEnabled,
+  calendarEnabled,
   layout,
   weekData,
   statistics,
@@ -171,6 +174,7 @@ const HabitSettingsModal = ({
   onSaveRituals,
   onSavePills,
   onTogglePills,
+  onToggleCalendar,
   onSetLayout,
   onSaveWeekData,
   onResetWeek,
@@ -181,6 +185,7 @@ const HabitSettingsModal = ({
   const [localRituals, setLocalRituals] = useState<RitualItem[]>(rituals);
   const [localPills, setLocalPills] = useState<PillItem[]>(pills);
   const [localPillsEnabled, setLocalPillsEnabled] = useState(pillsEnabled);
+  const [localCalendarEnabled, setLocalCalendarEnabled] = useState(calendarEnabled);
   const [localLayout, setLocalLayout] = useState(layout);
   const [localWeekData, setLocalWeekData] = useState<DayData[]>(weekData);
   const [newHabit, setNewHabit] = useState("");
@@ -199,6 +204,7 @@ const HabitSettingsModal = ({
       setLocalRituals(rituals);
       setLocalPills(pills);
       setLocalPillsEnabled(pillsEnabled);
+      setLocalCalendarEnabled(calendarEnabled);
       setLocalLayout(layout);
       // Initialize enabledHabits if not present
       setLocalWeekData(weekData.map((day, idx) => ({
@@ -206,7 +212,7 @@ const HabitSettingsModal = ({
         enabledHabits: day.enabledHabits ?? habits.map((_, i) => i)
       })));
     }
-  }, [open, habits, personalHabits, rituals, pills, pillsEnabled, layout, weekData]);
+  }, [open, habits, personalHabits, rituals, pills, pillsEnabled, calendarEnabled, layout, weekData]);
 
   const handleAddHabit = () => {
     if (newHabit.trim()) {
@@ -274,6 +280,7 @@ const HabitSettingsModal = ({
     onSaveRituals(localRituals);
     onSavePills(localPills);
     onTogglePills(localPillsEnabled);
+    onToggleCalendar(localCalendarEnabled);
     onSetLayout(localLayout);
     onSaveWeekData(localWeekData);
     onClose();
@@ -529,6 +536,20 @@ const HabitSettingsModal = ({
             <Separator className="my-4" />
             
             <div className="flex flex-col gap-4">
+              {/* Calendar Toggle */}
+              <div className="flex items-center justify-between">
+                <Label htmlFor="calendar-toggle" className="text-sm font-medium">
+                  📅 Показывать календарь
+                </Label>
+                <Switch
+                  id="calendar-toggle"
+                  checked={localCalendarEnabled}
+                  onCheckedChange={setLocalCalendarEnabled}
+                />
+              </div>
+              
+              <Separator />
+              
               {/* Layout Toggle */}
               <div>
                 <Label className="text-sm font-medium mb-2 block">Вид отображения</Label>
