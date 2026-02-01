@@ -133,7 +133,14 @@ export function useUserData() {
         const currentWeekStart = currentWeek[0].dateStr;
         const todayStr = getTodayDateStr();
         
-        let newState = { ...parsed };
+        // Ensure calendarEvents is always a valid array
+        const safeCalendarEvents = Array.isArray(parsed.calendarEvents) ? parsed.calendarEvents : [];
+        
+        let newState = { 
+          ...getDefaultState(),
+          ...parsed,
+          calendarEvents: safeCalendarEvents,
+        };
         
         // Check if rituals need daily reset
         if (parsed.lastRitualsResetDate !== todayStr) {
