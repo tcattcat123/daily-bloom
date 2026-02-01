@@ -11,6 +11,7 @@ import HabitSettingsModal from "@/components/HabitSettingsModal";
 import SupportRayButton from "@/components/SupportRayButton";
 import SupportRayNotifications from "@/components/SupportRayNotifications";
 import CalendarCard from "@/components/CalendarCard";
+import TeamButton from "@/components/TeamButton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
@@ -162,6 +163,8 @@ const Index = () => {
         </div>
 
         <div className="hidden sm:flex items-center gap-1.5">
+          {/* Team Button */}
+          <TeamButton />
           {/* Desktop Start Button */}
           <Button
             variant="default"
