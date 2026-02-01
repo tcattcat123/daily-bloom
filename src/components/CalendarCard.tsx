@@ -104,15 +104,15 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
     <div className="bg-card rounded-xl p-4 shadow-card border border-border">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-bold text-foreground">📅 Календарь</h3>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handlePrevMonth}>
+        <h3 className="text-sm font-bold text-foreground">Календарь</h3>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={handlePrevMonth}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <span className="text-xs font-medium min-w-24 text-center">
+          <span className="text-xs font-medium min-w-24 text-center text-muted-foreground">
             {format(currentMonth, 'LLLL yyyy', { locale: ru })}
           </span>
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleNextMonth}>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground" onClick={handleNextMonth}>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
@@ -141,13 +141,14 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
               onClick={() => handleDayClick(date)}
               onDoubleClick={() => handleDayDoubleClick(date)}
               className={`
-                relative aspect-square flex flex-col items-center justify-start p-1 rounded-lg transition-all text-xs
-                ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/50'}
-                ${isToday ? 'bg-habit-green/20 ring-1 ring-habit-green' : ''}
-                ${isSelected ? 'bg-primary/20 ring-1 ring-primary' : 'hover:bg-muted'}
+                relative aspect-square flex flex-col items-center justify-start p-1 rounded-md transition-all text-xs
+                ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground/40'}
+                ${isToday ? 'bg-habit-green/15 font-semibold' : ''}
+                ${isSelected && !isToday ? 'bg-muted/60' : ''}
+                ${isSelected ? 'ring-1 ring-primary/40' : 'hover:bg-muted/40'}
               `}
             >
-              <span className={`font-medium ${isToday ? 'text-habit-green' : ''}`}>
+              <span className={`text-[11px] ${isToday ? 'text-habit-green' : ''}`}>
                 {format(date, 'd')}
               </span>
               {/* Event titles */}
