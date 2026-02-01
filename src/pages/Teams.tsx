@@ -30,9 +30,21 @@ const Teams = () => {
   const { user } = useAuth();
   const [joinModalOpen, setJoinModalOpen] = useState(false);
   const [accessCode, setAccessCode] = useState("");
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
   
-  // Пока нет команды — показываем кнопки создать/вступить
-  const [userTeam] = useState<Team | null>(null);
+  // Хардкодим команду с root — потом будет из Supabase
+  const [userTeam] = useState<Team | null>({
+    id: "1",
+    name: "Моя команда",
+    members: [
+      { id: "1", nickname: "root", isLeader: true },
+    ],
+  });
+
+  const handleMemberClick = (nickname: string) => {
+    setSelectedUser(nickname);
+    setJoinModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -67,7 +79,8 @@ const Teams = () => {
               {userTeam.members.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50"
+                  onClick={() => handleMemberClick(member.nickname)}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
                 >
                   {/* Avatar */}
                   <Avatar className="w-12 h-12 shrink-0">
@@ -128,14 +141,6 @@ const Teams = () => {
                     <Plus className="w-4 h-4" />
                     Создать команду
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    className="gap-2"
-                    onClick={() => setJoinModalOpen(true)}
-                  >
-                    <UserPlus className="w-4 h-4" />
-                    Вступить в команду
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -152,7 +157,7 @@ const Teams = () => {
           <div className="space-y-4">
             <div>
               <p className="text-sm text-muted-foreground mb-3">
-                Введите код доступа в команду
+                Введите код доступа к команде пользователя <span className="font-semibold text-foreground">{selectedUser}</span>
               </p>
               <Input
                 placeholder="Код доступа"
@@ -161,7 +166,11 @@ const Teams = () => {
               />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setJoinModalOpen(false)}>
+              <Button variant="outline" onClick={() => {
+                setJoinModalOpen(false);
+                setSelectedUser(null);
+                setAccessCode("");
+              }}>
                 Отмена
               </Button>
               <Button 
