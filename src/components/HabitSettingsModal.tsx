@@ -192,7 +192,7 @@ const HabitSettingsModal = ({
   const [newRitual, setNewRitual] = useState("");
   const [newPillName, setNewPillName] = useState("");
   const [newPillTime, setNewPillTime] = useState("утро");
-  const [selectedDay, setSelectedDay] = useState(0);
+  const [selectedDays, setSelectedDays] = useState<number[]>([0]); // Multiple day selection
 
   const dayShortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -213,14 +213,27 @@ const HabitSettingsModal = ({
     }
   }, [open, habits, personalHabits, rituals, pills, pillsEnabled, calendarEnabled, layout, weekData]);
 
+  const toggleDaySelection = (dayIdx: number) => {
+    setSelectedDays(prev => {
+      if (prev.includes(dayIdx)) {
+        // Don't allow deselecting if it's the only selected day
+        if (prev.length === 1) return prev;
+        return prev.filter(d => d !== dayIdx);
+      }
+      return [...prev, dayIdx].sort((a, b) => a - b);
+    });
+  };
+
   const handleAddHabit = () => {
     if (newHabit.trim()) {
       const newHabitsList = [...localHabits, newHabit.trim()];
       setLocalHabits(newHabitsList);
-      // Add new habit to all days by default
-      setLocalWeekData(prev => prev.map(day => ({
+      // Add new habit ONLY to selected days
+      setLocalWeekData(prev => prev.map((day, idx) => ({
         ...day,
-        enabledHabits: [...(day.enabledHabits || []), newHabitsList.length - 1]
+        enabledHabits: selectedDays.includes(idx)
+          ? [...(day.enabledHabits || []), newHabitsList.length - 1]
+          : (day.enabledHabits || [])
       })));
       setNewHabit("");
     }
@@ -262,19 +275,37 @@ const HabitSettingsModal = ({
     })));
   };
 
-  const toggleHabitForDay = (dayIdx: number, habitIdx: number) => {
+  const toggleHabitForSelectedDays = (habitIdx: number) => {
     setLocalWeekData(prev => {
       const newWeekData = [...prev];
-      const day = { ...newWeekData[dayIdx] };
-      const enabled = day.enabledHabits ? [...day.enabledHabits] : localHabits.map((_, i) => i);
       
-      if (enabled.includes(habitIdx)) {
-        day.enabledHabits = enabled.filter(i => i !== habitIdx);
-      } else {
-        day.enabledHabits = [...enabled, habitIdx].sort((a, b) => a - b);
-      }
+      // Check if habit is enabled in ALL selected days
+      const enabledInAll = selectedDays.every(dayIdx => {
+        const day = newWeekData[dayIdx];
+        const enabled = day.enabledHabits ?? localHabits.map((_, i) => i);
+        return enabled.includes(habitIdx);
+      });
       
-      newWeekData[dayIdx] = day;
+      // Toggle for all selected days
+      selectedDays.forEach(dayIdx => {
+        const day = { ...newWeekData[dayIdx] };
+        const enabled = day.enabledHabits ? [...day.enabledHabits] : localHabits.map((_, i) => i);
+        
+        if (enabledInAll) {
+          // Remove from all selected days
+          day.enabledHabits = enabled.filter(i => i !== habitIdx);
+        } else {
+          // Add to all selected days
+          if (!enabled.includes(habitIdx)) {
+            day.enabledHabits = [...enabled, habitIdx].sort((a, b) => a - b);
+          } else {
+            day.enabledHabits = enabled;
+          }
+        }
+        
+        newWeekData[dayIdx] = day;
+      });
+      
       return newWeekData;
     });
   };
@@ -360,17 +391,17 @@ const HabitSettingsModal = ({
           {/* Work Habits Tab */}
           <TabsContent value="work" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
-              Настройте привычки для каждого дня недели
+              Выберите дни тапом, затем настройте привычки для них
             </p>
             
-            {/* Day selector */}
+            {/* Multi-day selector */}
             <div className="flex gap-1 mb-4">
               {dayShortNames.map((day, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setSelectedDay(idx)}
+                  onClick={() => toggleDaySelection(idx)}
                   className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    selectedDay === idx
+                    selectedDays.includes(idx)
                       ? 'bg-habit-green text-white'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
@@ -380,43 +411,59 @@ const HabitSettingsModal = ({
               ))}
             </div>
 
-            {/* Habits list with checkboxes for selected day */}
+            {/* Habits list with checkboxes for selected days */}
             <div className="flex flex-col gap-2 mb-4">
               <Label className="text-xs text-muted-foreground">
-                Задачи на {localWeekData[selectedDay]?.name || dayShortNames[selectedDay]}:
+                {selectedDays.length === 1 
+                  ? `Задачи на ${localWeekData[selectedDays[0]]?.name || dayShortNames[selectedDays[0]]}:`
+                  : `Задачи на выбранные дни (${selectedDays.map(d => dayShortNames[d]).join(', ')}):`
+                }
               </Label>
               {localHabits.length === 0 ? (
                 <p className="text-xs text-muted-foreground/60 italic py-2">
                   Добавьте привычки ниже
                 </p>
               ) : (
-              localHabits.map((habit, idx) => {
-                  const dayEnabled = localWeekData[selectedDay]?.enabledHabits;
-                  // If enabledHabits is undefined, all habits are enabled by default
-                  const isEnabled = dayEnabled !== undefined 
-                    ? dayEnabled.includes(idx) 
-                    : true;
+                localHabits.map((habit, idx) => {
+                  // Check if habit is enabled in ALL selected days
+                  const enabledInAll = selectedDays.every(dayIdx => {
+                    const dayEnabled = localWeekData[dayIdx]?.enabledHabits;
+                    return dayEnabled !== undefined ? dayEnabled.includes(idx) : true;
+                  });
+                  // Check if habit is enabled in SOME selected days (for partial state)
+                  const enabledInSome = selectedDays.some(dayIdx => {
+                    const dayEnabled = localWeekData[dayIdx]?.enabledHabits;
+                    return dayEnabled !== undefined ? dayEnabled.includes(idx) : true;
+                  });
+                  
                   return (
                     <div key={idx} className="flex items-center gap-2 group">
                       <button
                         type="button"
-                        onClick={() => toggleHabitForDay(selectedDay, idx)}
+                        onClick={() => toggleHabitForSelectedDays(idx)}
                         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                          isEnabled 
+                          enabledInAll 
                             ? 'bg-habit-green border-habit-green' 
-                            : 'border-muted-foreground/40 hover:border-muted-foreground'
+                            : enabledInSome
+                              ? 'bg-habit-green/50 border-habit-green'
+                              : 'border-muted-foreground/40 hover:border-muted-foreground'
                         }`}
                       >
-                        {isEnabled && (
+                        {enabledInAll && (
                           <Check className="w-3 h-3 text-white" />
+                        )}
+                        {!enabledInAll && enabledInSome && (
+                          <div className="w-2 h-0.5 bg-white rounded" />
                         )}
                       </button>
                       <div 
-                        onClick={() => toggleHabitForDay(selectedDay, idx)}
+                        onClick={() => toggleHabitForSelectedDays(idx)}
                         className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
-                          isEnabled 
+                          enabledInAll 
                             ? 'bg-muted hover:bg-muted/80' 
-                            : 'bg-muted/30 text-muted-foreground/50 hover:bg-muted/50'
+                            : enabledInSome
+                              ? 'bg-muted/60 hover:bg-muted/70'
+                              : 'bg-muted/30 text-muted-foreground/50 hover:bg-muted/50'
                         }`}
                       >
                         {habit}
