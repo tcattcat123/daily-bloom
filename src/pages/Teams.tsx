@@ -4,6 +4,13 @@ import { ArrowLeft, Crown, Plus, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 
 interface TeamMember {
@@ -21,15 +28,11 @@ interface Team {
 const Teams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [accessCode, setAccessCode] = useState("");
   
-  // Пока хардкодим данные — потом будет из Supabase
-  const [userTeam] = useState<Team | null>({
-    id: "1",
-    name: "Моя команда",
-    members: [
-      { id: "1", nickname: "root", isLeader: true },
-    ],
-  });
+  // Пока нет команды — показываем кнопки создать/вступить
+  const [userTeam] = useState<Team | null>(null);
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-6">
@@ -125,7 +128,11 @@ const Teams = () => {
                     <Plus className="w-4 h-4" />
                     Создать команду
                   </Button>
-                  <Button variant="outline" className="gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={() => setJoinModalOpen(true)}
+                  >
                     <UserPlus className="w-4 h-4" />
                     Вступить в команду
                   </Button>
@@ -135,6 +142,38 @@ const Teams = () => {
           </div>
         )}
       </div>
+
+      {/* Join Team Modal */}
+      <Dialog open={joinModalOpen} onOpenChange={setJoinModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Вступить в команду</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Введите код доступа в команду
+              </p>
+              <Input
+                placeholder="Код доступа"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setJoinModalOpen(false)}>
+                Отмена
+              </Button>
+              <Button 
+                className="bg-habit-green hover:bg-habit-green/90"
+                disabled={!accessCode.trim()}
+              >
+                Вступить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -131,9 +131,11 @@ const Index = () => {
           </div>
           <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-foreground rounded" />
-            <h1 className="text-lg font-bold text-foreground">HumanOS</h1>
+            <div className="w-4 h-4 sm:w-4 sm:h-4 w-3 h-3 bg-foreground rounded" />
+            <h1 className="text-[10px] sm:text-lg font-bold text-foreground">HumanOS</h1>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
+            {/* Mobile Team Button */}
+            <TeamButton mobile />
             {/* Mobile Start Button - small, inline with date */}
             <Button
               variant="default"
