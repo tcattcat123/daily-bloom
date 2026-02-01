@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, Plus, Users, UserPlus } from "lucide-react";
+import { ArrowLeft, Crown, Plus, Users, UserPlus, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +19,8 @@ interface TeamMember {
   id: string;
   nickname: string;
   isLeader?: boolean;
+  occupation?: string;
+  tiktokLink?: string;
 }
 
 interface Team {
@@ -29,21 +33,59 @@ const Teams = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [accessCode, setAccessCode] = useState("");
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   
+  // Form fields for creating team
+  const [occupation, setOccupation] = useState("");
+  const [motivation, setMotivation] = useState("");
+  const [leaderValue, setLeaderValue] = useState("");
+  const [tiktokLink, setTiktokLink] = useState("");
+  
   // Хардкодим команду с root — потом будет из Supabase
-  const [userTeam] = useState<Team | null>({
+  const [userTeam, setUserTeam] = useState<Team | null>({
     id: "1",
     name: "Моя команда",
     members: [
-      { id: "1", nickname: "root", isLeader: true },
+      { 
+        id: "1", 
+        nickname: "root", 
+        isLeader: true,
+        occupation: "Продуктивность и саморазвитие",
+        tiktokLink: "https://tiktok.com/@root"
+      },
     ],
   });
 
   const handleMemberClick = (nickname: string) => {
     setSelectedUser(nickname);
     setJoinModalOpen(true);
+  };
+
+  const handleCreateTeam = () => {
+    if (!occupation.trim() || !motivation.trim() || !leaderValue.trim()) return;
+    
+    const newTeam: Team = {
+      id: Date.now().toString(),
+      name: "Моя команда",
+      members: [
+        {
+          id: user?.id || "1",
+          nickname: user?.nickname || "User",
+          isLeader: true,
+          occupation: occupation.trim(),
+          tiktokLink: tiktokLink.trim() || undefined,
+        }
+      ]
+    };
+    
+    setUserTeam(newTeam);
+    setCreateModalOpen(false);
+    setOccupation("");
+    setMotivation("");
+    setLeaderValue("");
+    setTiktokLink("");
   };
 
   return (
@@ -89,7 +131,7 @@ const Teams = () => {
                     </AvatarFallback>
                   </Avatar>
                   
-                  {/* Nickname with crown */}
+                  {/* Member info with occupation and TikTok */}
                   <div className="flex flex-col min-w-0 flex-1">
                     {member.isLeader && (
                       <Crown className="w-4 h-4 text-foreground mb-0.5" />
@@ -97,11 +139,28 @@ const Teams = () => {
                     <span className="text-sm font-medium text-foreground truncate">
                       {member.nickname}
                     </span>
+                    {member.occupation && (
+                      <span className="text-xs text-muted-foreground truncate">
+                        {member.occupation}
+                      </span>
+                    )}
+                    {member.tiktokLink && (
+                      <a 
+                        href={member.tiktokLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        TikTok
+                      </a>
+                    )}
                   </div>
 
                   {/* Leader badge */}
                   {member.isLeader && (
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full shrink-0">
                       Лидер
                     </span>
                   )}
@@ -137,7 +196,10 @@ const Teams = () => {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button className="gap-2 bg-habit-green hover:bg-habit-green/90">
+                  <Button 
+                    className="gap-2 bg-habit-green hover:bg-habit-green/90"
+                    onClick={() => setCreateModalOpen(true)}
+                  >
                     <Plus className="w-4 h-4" />
                     Создать команду
                   </Button>
@@ -178,6 +240,78 @@ const Teams = () => {
                 disabled={!accessCode.trim()}
               >
                 Вступить
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Team Modal */}
+      <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Создать команду</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="occupation">Чем вы занимаетесь?</Label>
+              <Textarea
+                id="occupation"
+                placeholder="Например: Продуктивность и саморазвитие, фитнес, бизнес..."
+                value={occupation}
+                onChange={(e) => setOccupation(e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="motivation">На что вы хотите мотивировать аудиторию?</Label>
+              <Textarea
+                id="motivation"
+                placeholder="Например: Ежедневные привычки, здоровый образ жизни, достижение целей..."
+                value={motivation}
+                onChange={(e) => setMotivation(e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="leaderValue">Чем вы будете полезны как лидер?</Label>
+              <Textarea
+                id="leaderValue"
+                placeholder="Например: Буду делиться опытом, мотивировать команду, давать обратную связь..."
+                value={leaderValue}
+                onChange={(e) => setLeaderValue(e.target.value)}
+                className="min-h-[80px]"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="tiktok">Ссылка на ваш ТикТок (необязательно)</Label>
+              <Input
+                id="tiktok"
+                placeholder="https://tiktok.com/@username"
+                value={tiktokLink}
+                onChange={(e) => setTiktokLink(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex gap-2 justify-end pt-2">
+              <Button variant="outline" onClick={() => {
+                setCreateModalOpen(false);
+                setOccupation("");
+                setMotivation("");
+                setLeaderValue("");
+                setTiktokLink("");
+              }}>
+                Отмена
+              </Button>
+              <Button 
+                className="bg-habit-green hover:bg-habit-green/90"
+                disabled={!occupation.trim() || !motivation.trim() || !leaderValue.trim()}
+                onClick={handleCreateTeam}
+              >
+                Создать
               </Button>
             </div>
           </div>
