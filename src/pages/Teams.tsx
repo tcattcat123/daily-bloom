@@ -111,13 +111,7 @@ const Teams = () => {
         {/* Current Team */}
         {userTeam ? (
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                {userTeam.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="p-4 space-y-3">
               {userTeam.members.map((member) => (
                 <div
                   key={member.id}
@@ -125,20 +119,27 @@ const Teams = () => {
                   className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
                 >
                   {/* Avatar */}
-                  <Avatar className="w-12 h-12 shrink-0">
-                    <AvatarFallback className="bg-habit-green text-white text-base font-bold">
+                  <Avatar className="w-9 h-9 shrink-0">
+                    <AvatarFallback className="bg-habit-green text-white text-sm font-bold">
                       {member.nickname.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   
                   {/* Member info with occupation and TikTok */}
                   <div className="flex flex-col min-w-0 flex-1">
-                    {member.isLeader && (
-                      <Crown className="w-4 h-4 text-foreground mb-0.5" />
-                    )}
-                    <span className="text-sm font-medium text-foreground truncate">
-                      {member.nickname}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {member.isLeader && (
+                        <Crown className="w-3.5 h-3.5 text-foreground" />
+                      )}
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {member.nickname}
+                      </span>
+                      {member.isLeader && (
+                        <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full">
+                          Лидер
+                        </span>
+                      )}
+                    </div>
                     {member.occupation && (
                       <span className="text-xs text-muted-foreground truncate">
                         {member.occupation}
@@ -157,24 +158,17 @@ const Teams = () => {
                       </a>
                     )}
                   </div>
-
-                  {/* Leader badge */}
-                  {member.isLeader && (
-                    <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full shrink-0">
-                      Лидер
-                    </span>
-                  )}
                 </div>
               ))}
 
-              {/* Invite button */}
+              {/* Create team button */}
               <Button
                 variant="outline"
                 className="w-full gap-2 mt-3"
-                onClick={() => {/* TODO: invite modal */}}
+                onClick={() => setCreateModalOpen(true)}
               >
-                <UserPlus className="w-4 h-4" />
-                Пригласить участника
+                <Plus className="w-4 h-4" />
+                Создать команду
               </Button>
             </CardContent>
           </Card>
