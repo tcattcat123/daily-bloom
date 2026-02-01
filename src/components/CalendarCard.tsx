@@ -62,7 +62,7 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState("");
   const [newEventTime, setNewEventTime] = useState("");
-  const [newEventColor, setNewEventColor] = useState<CalendarEvent['color']>('green');
+  const [newEventColor, setNewEventColor] = useState<CalendarEvent['color']>('gray');
   
   const maxVisibleEvents = isMobile ? 2 : 12;
 
@@ -119,7 +119,7 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
     
     setNewEventTitle("");
     setNewEventTime("");
-    setNewEventColor('green');
+    setNewEventColor('gray');
     setIsAddModalOpen(false);
   };
 
