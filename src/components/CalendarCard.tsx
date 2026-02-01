@@ -66,7 +66,7 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
 
   const getEventsForDate = (date: Date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    return events.filter(e => e.date === dateStr);
+    return (events || []).filter(e => e.date === dateStr);
   };
 
   const handlePrevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
