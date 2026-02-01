@@ -25,6 +25,16 @@ interface DayData {
   enabledHabits?: number[]; // Which habits are enabled for this day
 }
 
+interface Statistics {
+  totalRitualsDone: number;
+  totalWorkHabitsDone: number;
+  totalPersonalHabitsDone: number;
+  totalPillsDone: number;
+  perfectDays: number;
+  currentStreak: number;
+  longestStreak: number;
+}
+
 interface UserDataState {
   rituals: Ritual[];
   habits: string[];
@@ -34,6 +44,8 @@ interface UserDataState {
   weekData: DayData[];
   personalWeekData: DayData[];
   layout: 'vertical' | 'horizontal';
+  lastRitualsResetDate: string; // Track when rituals were last reset
+  statistics: Statistics;
 }
 
 const generateWeek = (): DayData[] => {
@@ -57,6 +69,21 @@ const generateWeek = (): DayData[] => {
   });
 };
 
+const getTodayDateStr = (): string => {
+  const today = new Date();
+  return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+};
+
+const getDefaultStatistics = (): Statistics => ({
+  totalRitualsDone: 0,
+  totalWorkHabitsDone: 0,
+  totalPersonalHabitsDone: 0,
+  totalPillsDone: 0,
+  perfectDays: 0,
+  currentStreak: 0,
+  longestStreak: 0,
+});
+
 const getDefaultState = (): UserDataState => ({
   rituals: DEFAULT_RITUALS.map((text) => ({ text, done: false })),
   habits: [...DEFAULT_WORK_HABITS],
@@ -66,6 +93,8 @@ const getDefaultState = (): UserDataState => ({
   weekData: generateWeek(),
   personalWeekData: generateWeek(),
   layout: 'vertical',
+  lastRitualsResetDate: getTodayDateStr(),
+  statistics: getDefaultStatistics(),
 });
 
 export function useUserData() {
@@ -90,19 +119,64 @@ export function useUserData() {
         const currentWeek = generateWeek();
         const storedWeekStart = parsed.weekData?.[0]?.dateStr;
         const currentWeekStart = currentWeek[0].dateStr;
+        const todayStr = getTodayDateStr();
+        
+        let newState = { ...parsed };
+        
+        // Check if rituals need daily reset
+        if (parsed.lastRitualsResetDate !== todayStr) {
+          // Count completed rituals before reset for statistics
+          const completedRituals = parsed.rituals?.filter((r: Ritual) => r.done).length || 0;
+          const completedPills = parsed.pills?.filter((p: Pill) => p.done).length || 0;
+          
+          // Update statistics
+          const prevStats = parsed.statistics || getDefaultStatistics();
+          const allRitualsDone = parsed.rituals?.length > 0 && completedRituals === parsed.rituals.length;
+          
+          newState = {
+            ...newState,
+            rituals: (parsed.rituals || []).map((r: Ritual) => ({ ...r, done: false })),
+            pills: (parsed.pills || []).map((p: Pill) => ({ ...p, done: false })),
+            lastRitualsResetDate: todayStr,
+            statistics: {
+              ...prevStats,
+              totalRitualsDone: prevStats.totalRitualsDone + completedRituals,
+              totalPillsDone: prevStats.totalPillsDone + completedPills,
+              perfectDays: allRitualsDone ? prevStats.perfectDays + 1 : prevStats.perfectDays,
+              currentStreak: allRitualsDone ? prevStats.currentStreak + 1 : 0,
+              longestStreak: allRitualsDone 
+                ? Math.max(prevStats.longestStreak, prevStats.currentStreak + 1)
+                : prevStats.longestStreak,
+            },
+          };
+        }
         
         if (storedWeekStart !== currentWeekStart) {
-          // New week - reset daily progress but keep habits/rituals config
-          setState({
-            ...parsed,
-            rituals: parsed.rituals.map((r: Ritual) => ({ ...r, done: false })),
-            pills: parsed.pills.map((p: Pill) => ({ ...p, done: false })),
+          // New week - reset weekly progress but keep habits/rituals config
+          // Count completed habits before reset
+          const totalWorkDone = parsed.weekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
+          const totalPersonalDone = parsed.personalWeekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
+          
+          const prevStats = newState.statistics || getDefaultStatistics();
+          
+          newState = {
+            ...newState,
             weekData: currentWeek,
             personalWeekData: currentWeek,
-          });
-        } else {
-          setState(parsed);
+            statistics: {
+              ...prevStats,
+              totalWorkHabitsDone: prevStats.totalWorkHabitsDone + totalWorkDone,
+              totalPersonalHabitsDone: prevStats.totalPersonalHabitsDone + totalPersonalDone,
+            },
+          };
         }
+        
+        // Ensure statistics exists
+        if (!newState.statistics) {
+          newState.statistics = getDefaultStatistics();
+        }
+        
+        setState(newState);
       } catch {
         setState(getDefaultState());
       }
@@ -234,6 +308,8 @@ export function useUserData() {
       weekData: generateWeek(),
       personalWeekData: generateWeek(),
       layout: 'vertical',
+      lastRitualsResetDate: getTodayDateStr(),
+      statistics: getDefaultStatistics(),
     });
   }, []);
 
