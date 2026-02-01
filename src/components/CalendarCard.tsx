@@ -150,14 +150,14 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
                   {dayEvents.slice(0, 2).map((event) => (
                     <div
                       key={event.id}
-                      className={`text-[7px] leading-tight px-0.5 rounded truncate ${getColorClass(event.color)}`}
+                      className={`text-[9px] leading-tight px-1 py-0.5 rounded truncate ${getColorClass(event.color)}`}
                       title={event.title}
                     >
-                      {event.title.length > 8 ? event.title.slice(0, 7) + '…' : event.title}
+                      {event.title}
                     </div>
                   ))}
                   {dayEvents.length > 2 && (
-                    <span className="text-[7px] text-muted-foreground text-center">+{dayEvents.length - 2}</span>
+                    <span className="text-[9px] text-muted-foreground text-center">+{dayEvents.length - 2}</span>
                   )}
                 </div>
               )}
