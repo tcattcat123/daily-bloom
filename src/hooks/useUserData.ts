@@ -231,9 +231,10 @@ export function useUserData() {
       weekData: prev.weekData.map((day) => ({
         ...day,
         completedIndices: day.completedIndices.filter((i) => i < habits.length),
+        // Preserve existing enabledHabits, just filter invalid indices
         enabledHabits: day.enabledHabits 
           ? day.enabledHabits.filter((i) => i < habits.length)
-          : habits.map((_, i) => i),
+          : undefined, // Keep undefined if not set, modal will handle initialization
       })),
     }));
   }, []);
@@ -328,15 +329,22 @@ export function useUserData() {
     setState((prev) => ({ ...prev, layout }));
   }, []);
 
-  // Reset week
+  // Reset week - preserves habit configuration (enabledHabits)
   const resetWeek = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      rituals: prev.rituals.map((r) => ({ ...r, done: false })),
-      pills: prev.pills.map((p) => ({ ...p, done: false })),
-      weekData: generateWeek(),
-      personalWeekData: generateWeek(),
-    }));
+    setState((prev) => {
+      const newWeek = generateWeek();
+      return {
+        ...prev,
+        rituals: prev.rituals.map((r) => ({ ...r, done: false })),
+        pills: prev.pills.map((p) => ({ ...p, done: false })),
+        // Preserve enabledHabits from old weekData
+        weekData: newWeek.map((day, idx) => ({
+          ...day,
+          enabledHabits: prev.weekData[idx]?.enabledHabits,
+        })),
+        personalWeekData: newWeek,
+      };
+    });
   }, []);
 
   // Clear all data (remove demo data)
