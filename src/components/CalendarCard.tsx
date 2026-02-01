@@ -144,17 +144,20 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
               <span className={`font-medium ${isToday ? 'text-habit-green' : ''}`}>
                 {format(date, 'd')}
               </span>
-              {/* Event indicators */}
+              {/* Event titles */}
               {dayEvents.length > 0 && (
-                <div className="flex gap-0.5 mt-0.5 flex-wrap justify-center max-w-full">
-                  {dayEvents.slice(0, 3).map((event) => (
+                <div className="flex flex-col gap-0.5 mt-0.5 w-full overflow-hidden">
+                  {dayEvents.slice(0, 2).map((event) => (
                     <div
                       key={event.id}
-                      className={`w-1.5 h-1.5 rounded-full ${getColorClass(event.color).split(' ')[0]}`}
-                    />
+                      className={`text-[7px] leading-tight px-0.5 rounded truncate ${getColorClass(event.color)}`}
+                      title={event.title}
+                    >
+                      {event.title.length > 8 ? event.title.slice(0, 7) + '…' : event.title}
+                    </div>
                   ))}
-                  {dayEvents.length > 3 && (
-                    <span className="text-[8px] text-muted-foreground">+{dayEvents.length - 3}</span>
+                  {dayEvents.length > 2 && (
+                    <span className="text-[7px] text-muted-foreground text-center">+{dayEvents.length - 2}</span>
                   )}
                 </div>
               )}
