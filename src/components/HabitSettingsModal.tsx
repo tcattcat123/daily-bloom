@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTheme } from "next-themes";
+
+interface Statistics {
+  totalRitualsDone: number;
+  totalWorkHabitsDone: number;
+  totalPersonalHabitsDone: number;
+  totalPillsDone: number;
+  perfectDays: number;
+  currentStreak: number;
+  longestStreak: number;
+}
 
 interface PillItem {
   name: string;
@@ -38,6 +48,7 @@ interface HabitSettingsModalProps {
   pillsEnabled: boolean;
   layout: "vertical" | "horizontal";
   weekData: DayData[];
+  statistics?: Statistics;
   onSaveHabits: (habits: string[]) => void;
   onSavePersonalHabits: (habits: string[]) => void;
   onSaveRituals: (rituals: RitualItem[]) => void;
@@ -80,6 +91,70 @@ const ThemeToggleSection = () => {
   );
 };
 
+// Statistics section component
+const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
+  if (!statistics) return null;
+  
+  return (
+    <div className="space-y-4">
+      <Label className="text-sm font-medium mb-2 block">Ваша статистика</Label>
+      
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-gradient-to-br from-habit-green/20 to-habit-green/5 rounded-xl p-3 border border-habit-green/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Flame className="w-4 h-4 text-streak-orange" />
+            <span className="text-xs text-muted-foreground">Текущий стрик</span>
+          </div>
+          <div className="text-2xl font-bold text-habit-green">{statistics.currentStreak}</div>
+          <div className="text-[10px] text-muted-foreground">дней подряд</div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl p-3 border border-primary/20">
+          <div className="flex items-center gap-2 mb-1">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <span className="text-xs text-muted-foreground">Рекорд</span>
+          </div>
+          <div className="text-2xl font-bold text-primary">{statistics.longestStreak}</div>
+          <div className="text-[10px] text-muted-foreground">максимум дней</div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-ritual-gold/20 to-ritual-gold/5 rounded-xl p-3 border border-ritual-gold/20">
+          <div className="flex items-center gap-2 mb-1">
+            <Calendar className="w-4 h-4 text-ritual-gold" />
+            <span className="text-xs text-muted-foreground">Идеальных дней</span>
+          </div>
+          <div className="text-2xl font-bold text-ritual-gold">{statistics.perfectDays}</div>
+          <div className="text-[10px] text-muted-foreground">все ритуалы</div>
+        </div>
+        
+        <div className="bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl p-3 border border-accent/20">
+          <div className="flex items-center gap-2 mb-1">
+            <CheckCircle2 className="w-4 h-4 text-accent-foreground" />
+            <span className="text-xs text-muted-foreground">Всего ритуалов</span>
+          </div>
+          <div className="text-2xl font-bold text-foreground">{statistics.totalRitualsDone}</div>
+          <div className="text-[10px] text-muted-foreground">выполнено</div>
+        </div>
+      </div>
+      
+      <div className="space-y-2 pt-2">
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-muted-foreground">Рабочие привычки</span>
+          <span className="font-medium">{statistics.totalWorkHabitsDone}</span>
+        </div>
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-muted-foreground">Личное развитие</span>
+          <span className="font-medium">{statistics.totalPersonalHabitsDone}</span>
+        </div>
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-muted-foreground">Таблетки принято</span>
+          <span className="font-medium">{statistics.totalPillsDone}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const HabitSettingsModal = ({ 
   open, 
   onClose, 
@@ -90,6 +165,7 @@ const HabitSettingsModal = ({
   pillsEnabled,
   layout,
   weekData,
+  statistics,
   onSaveHabits, 
   onSavePersonalHabits,
   onSaveRituals,
@@ -444,6 +520,10 @@ const HabitSettingsModal = ({
 
           {/* Other Settings Tab */}
           <TabsContent value="other" className="mt-4">
+            <StatisticsSection statistics={statistics} />
+            
+            <Separator className="my-4" />
+            
             <ThemeToggleSection />
             
             <Separator className="my-4" />

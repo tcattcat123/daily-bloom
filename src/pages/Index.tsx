@@ -25,6 +25,7 @@ const Index = () => {
     weekData,
     personalWeekData,
     layout,
+    statistics,
     isLoaded,
     setRituals,
     toggleRitual,
@@ -354,6 +355,7 @@ const Index = () => {
         pillsEnabled={pillsEnabled}
         layout={layout}
         weekData={weekData}
+        statistics={statistics}
         onSaveHabits={setHabits}
         onSavePersonalHabits={setPersonalHabits}
         onSaveRituals={setRituals}
