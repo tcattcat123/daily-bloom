@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2, Check } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,6 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useTheme } from "next-themes";
 
 interface Statistics {
@@ -264,14 +263,20 @@ const HabitSettingsModal = ({
   };
 
   const toggleHabitForDay = (dayIdx: number, habitIdx: number) => {
-    setLocalWeekData(prev => prev.map((day, idx) => {
-      if (idx !== dayIdx) return day;
-      const enabled = day.enabledHabits || [];
+    setLocalWeekData(prev => {
+      const newWeekData = [...prev];
+      const day = { ...newWeekData[dayIdx] };
+      const enabled = day.enabledHabits ? [...day.enabledHabits] : localHabits.map((_, i) => i);
+      
       if (enabled.includes(habitIdx)) {
-        return { ...day, enabledHabits: enabled.filter(i => i !== habitIdx) };
+        day.enabledHabits = enabled.filter(i => i !== habitIdx);
+      } else {
+        day.enabledHabits = [...enabled, habitIdx].sort((a, b) => a - b);
       }
-      return { ...day, enabledHabits: [...enabled, habitIdx].sort((a, b) => a - b) };
-    }));
+      
+      newWeekData[dayIdx] = day;
+      return newWeekData;
+    });
   };
 
   const handleSave = () => {
@@ -385,18 +390,35 @@ const HabitSettingsModal = ({
                   Добавьте привычки ниже
                 </p>
               ) : (
-                localHabits.map((habit, idx) => {
-                  const isEnabled = localWeekData[selectedDay]?.enabledHabits?.includes(idx) ?? true;
+              localHabits.map((habit, idx) => {
+                  const dayEnabled = localWeekData[selectedDay]?.enabledHabits;
+                  // If enabledHabits is undefined, all habits are enabled by default
+                  const isEnabled = dayEnabled !== undefined 
+                    ? dayEnabled.includes(idx) 
+                    : true;
                   return (
                     <div key={idx} className="flex items-center gap-2 group">
-                      <Checkbox
-                        checked={isEnabled}
-                        onCheckedChange={() => toggleHabitForDay(selectedDay, idx)}
-                        className="data-[state=checked]:bg-habit-green data-[state=checked]:border-habit-green"
-                      />
-                      <div className={`flex-1 px-3 py-2 rounded-lg text-sm transition-opacity ${
-                        isEnabled ? 'bg-muted' : 'bg-muted/50 text-muted-foreground/60'
-                      }`}>
+                      <button
+                        type="button"
+                        onClick={() => toggleHabitForDay(selectedDay, idx)}
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                          isEnabled 
+                            ? 'bg-habit-green border-habit-green' 
+                            : 'border-muted-foreground/40 hover:border-muted-foreground'
+                        }`}
+                      >
+                        {isEnabled && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </button>
+                      <div 
+                        onClick={() => toggleHabitForDay(selectedDay, idx)}
+                        className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                          isEnabled 
+                            ? 'bg-muted hover:bg-muted/80' 
+                            : 'bg-muted/30 text-muted-foreground/50 hover:bg-muted/50'
+                        }`}
+                      >
                         {habit}
                       </div>
                       <Button
