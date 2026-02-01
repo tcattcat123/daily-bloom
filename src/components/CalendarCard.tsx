@@ -22,6 +22,17 @@ const colorOptions = [
   { value: 'gray' as const, label: 'Серый', className: 'bg-muted-foreground' },
 ];
 
+const getDotColorClass = (color: CalendarEvent['color']) => {
+  switch (color) {
+    case 'green': return 'bg-habit-green';
+    case 'blue': return 'bg-blue-500';
+    case 'yellow': return 'bg-ritual-gold';
+    case 'orange': return 'bg-streak-orange';
+    case 'gray': return 'bg-muted-foreground';
+    default: return 'bg-muted-foreground';
+  }
+};
+
 const getColorClass = (color: CalendarEvent['color']) => {
   switch (color) {
     case 'green': return 'bg-habit-green text-white';
@@ -161,10 +172,11 @@ const CalendarCard = ({ events, onAddEvent, onRemoveEvent }: CalendarCardProps) 
                   {dayEvents.slice(0, maxVisibleEvents).map((event) => (
                     <div
                       key={event.id}
-                      className={`text-[9px] leading-tight px-1 py-0.5 rounded truncate ${getColorClass(event.color)}`}
+                      className="flex items-center gap-1 text-[9px] leading-tight text-foreground/80"
                       title={event.title}
                     >
-                      {event.title}
+                      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${getDotColorClass(event.color)}`} />
+                      <span className="truncate">{event.title}</span>
                     </div>
                   ))}
                   {dayEvents.length > maxVisibleEvents && (
