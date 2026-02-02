@@ -144,7 +144,7 @@ const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
           <span className="font-medium">{statistics.totalWorkHabitsDone}</span>
         </div>
         <div className="flex justify-between items-center text-xs">
-          <span className="text-muted-foreground">Личное развитие</span>
+          <span className="text-muted-foreground">Выработка привычек</span>
           <span className="font-medium">{statistics.totalPersonalHabitsDone}</span>
         </div>
         <div className="flex justify-between items-center text-xs">
@@ -352,7 +352,7 @@ const HabitSettingsModal = ({
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="rituals" className="text-xs">Утро</TabsTrigger>
             <TabsTrigger value="work" className="text-xs">Рабочие</TabsTrigger>
-            <TabsTrigger value="personal" className="text-xs">Личные</TabsTrigger>
+            <TabsTrigger value="personal" className="text-xs">Привычки</TabsTrigger>
             <TabsTrigger value="pills" className="text-xs">Таблетки</TabsTrigger>
             <TabsTrigger value="other" className="text-xs">Прочее</TabsTrigger>
           </TabsList>
@@ -534,7 +534,7 @@ const HabitSettingsModal = ({
           {/* Personal Habits Tab */}
           <TabsContent value="personal" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
-              Привычки для личного развития (верхний график)
+              Привычки для выработки дисциплины (верхний график)
             </p>
             <div className="flex flex-col gap-2">
               {localPersonalHabits.map((habit, idx) => (
