@@ -142,7 +142,7 @@ export function useUserData() {
           calendarEvents: safeCalendarEvents,
         };
         
-        // Check if rituals need daily reset
+        // Check if rituals need daily reset (only morning rituals, NOT personal development)
         if (parsed.lastRitualsResetDate !== todayStr) {
           // Count completed rituals before reset for statistics
           const completedRituals = parsed.rituals?.filter((r: Ritual) => r.done).length || 0;
@@ -154,8 +154,10 @@ export function useUserData() {
           
           newState = {
             ...newState,
+            // Only reset morning rituals and pills, NOT personal development
             rituals: (parsed.rituals || []).map((r: Ritual) => ({ ...r, done: false })),
             pills: (parsed.pills || []).map((p: Pill) => ({ ...p, done: false })),
+            // Personal development (personalWeekData) is NOT reset daily
             lastRitualsResetDate: todayStr,
             statistics: {
               ...prevStats,
