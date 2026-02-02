@@ -193,6 +193,12 @@ const HabitSettingsModal = ({
   const [newPillName, setNewPillName] = useState("");
   const [newPillTime, setNewPillTime] = useState("утро");
   const [selectedDays, setSelectedDays] = useState<number[]>([0]); // Multiple day selection
+  
+  // Inline editing states
+  const [editingRitualIdx, setEditingRitualIdx] = useState<number | null>(null);
+  const [editingHabitIdx, setEditingHabitIdx] = useState<number | null>(null);
+  const [editingPersonalHabitIdx, setEditingPersonalHabitIdx] = useState<number | null>(null);
+  const [editingPillIdx, setEditingPillIdx] = useState<number | null>(null);
 
   const dayShortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -359,9 +365,23 @@ const HabitSettingsModal = ({
             <div className="flex flex-col gap-2">
               {localRituals.map((ritual, idx) => (
                 <div key={idx} className="flex items-center gap-2 group">
-                  <div className="flex-1 px-3 py-2 bg-ritual-gold/10 rounded-lg text-sm text-foreground">
-                    {ritual.text}
-                  </div>
+                  {editingRitualIdx === idx ? (
+                    <Input
+                      autoFocus
+                      value={ritual.text}
+                      onChange={(e) => setLocalRituals(prev => prev.map((r, i) => i === idx ? { ...r, text: e.target.value } : r))}
+                      onBlur={() => setEditingRitualIdx(null)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditingRitualIdx(null)}
+                      className="flex-1 bg-ritual-gold/10"
+                    />
+                  ) : (
+                    <div 
+                      onClick={() => setEditingRitualIdx(idx)}
+                      className="flex-1 px-3 py-2 bg-ritual-gold/10 rounded-lg text-sm text-foreground cursor-pointer hover:bg-ritual-gold/20 transition-colors"
+                    >
+                      {ritual.text}
+                    </div>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -456,18 +476,29 @@ const HabitSettingsModal = ({
                           <div className="w-2 h-0.5 bg-white rounded" />
                         )}
                       </button>
-                      <div 
-                        onClick={() => toggleHabitForSelectedDays(idx)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
-                          enabledInAll 
-                            ? 'bg-muted hover:bg-muted/80' 
-                            : enabledInSome
-                              ? 'bg-muted/60 hover:bg-muted/70'
-                              : 'bg-muted/30 text-muted-foreground/50 hover:bg-muted/50'
-                        }`}
-                      >
-                        {habit}
-                      </div>
+                      {editingHabitIdx === idx ? (
+                        <Input
+                          autoFocus
+                          value={habit}
+                          onChange={(e) => setLocalHabits(prev => prev.map((h, i) => i === idx ? e.target.value : h))}
+                          onBlur={() => setEditingHabitIdx(null)}
+                          onKeyDown={(e) => e.key === "Enter" && setEditingHabitIdx(null)}
+                          className="flex-1"
+                        />
+                      ) : (
+                        <div 
+                          onClick={() => setEditingHabitIdx(idx)}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                            enabledInAll 
+                              ? 'bg-muted hover:bg-muted/80' 
+                              : enabledInSome
+                                ? 'bg-muted/60 hover:bg-muted/70'
+                                : 'bg-muted/30 text-muted-foreground/50 hover:bg-muted/50'
+                          }`}
+                        >
+                          {habit}
+                        </div>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
@@ -508,9 +539,23 @@ const HabitSettingsModal = ({
             <div className="flex flex-col gap-2">
               {localPersonalHabits.map((habit, idx) => (
                 <div key={idx} className="flex items-center gap-2 group">
-                  <div className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm">
-                    {habit}
-                  </div>
+                  {editingPersonalHabitIdx === idx ? (
+                    <Input
+                      autoFocus
+                      value={habit}
+                      onChange={(e) => setLocalPersonalHabits(prev => prev.map((h, i) => i === idx ? e.target.value : h))}
+                      onBlur={() => setEditingPersonalHabitIdx(null)}
+                      onKeyDown={(e) => e.key === "Enter" && setEditingPersonalHabitIdx(null)}
+                      className="flex-1"
+                    />
+                  ) : (
+                    <div 
+                      onClick={() => setEditingPersonalHabitIdx(idx)}
+                      className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm cursor-pointer hover:bg-muted/80 transition-colors"
+                    >
+                      {habit}
+                    </div>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -554,10 +599,35 @@ const HabitSettingsModal = ({
               <div className="flex flex-col gap-2">
                 {localPills.map((pill, idx) => (
                   <div key={idx} className="flex items-center gap-2 group">
-                    <div className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm flex justify-between">
-                      <span>{pill.name}</span>
-                      <span className="text-muted-foreground text-xs">{pill.time}</span>
-                    </div>
+                    {editingPillIdx === idx ? (
+                      <div className="flex-1 flex gap-2">
+                        <Input
+                          autoFocus
+                          value={pill.name}
+                          onChange={(e) => setLocalPills(prev => prev.map((p, i) => i === idx ? { ...p, name: e.target.value } : p))}
+                          onBlur={() => setEditingPillIdx(null)}
+                          onKeyDown={(e) => e.key === "Enter" && setEditingPillIdx(null)}
+                          className="flex-1"
+                        />
+                        <select
+                          value={pill.time}
+                          onChange={(e) => setLocalPills(prev => prev.map((p, i) => i === idx ? { ...p, time: e.target.value } : p))}
+                          className="px-2 py-2 text-sm border rounded-md bg-background"
+                        >
+                          <option value="утро">утро</option>
+                          <option value="обед">обед</option>
+                          <option value="вечер">вечер</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div 
+                        onClick={() => setEditingPillIdx(idx)}
+                        className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm flex justify-between cursor-pointer hover:bg-muted/80 transition-colors"
+                      >
+                        <span>{pill.name}</span>
+                        <span className="text-muted-foreground text-xs">{pill.time}</span>
+                      </div>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
