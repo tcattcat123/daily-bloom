@@ -97,36 +97,54 @@ export function useAuth() {
   }, []);
 
   const loginWithNickname = useCallback(async (nickname: string, password: string) => {
-    // Find user's email by nickname (case-insensitive)
-    const { data: profileData, error: profileError } = await supabase
+    // Find all emails by nickname (case-insensitive). Nicknames may be duplicated,
+    // so we try to sign in with each email until password matches.
+    const { data: profiles, error: profileError } = await supabase
       .from('profiles')
-      .select('email')
+      .select('email, created_at')
       .ilike('nickname', nickname)
-      .limit(1)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(10);
 
     if (profileError) {
-      if (profileError.code === 'PGRST116') {
-        throw new Error('Пользователь не найден');
-      }
       throw profileError;
     }
 
-    if (!profileData || !profileData.email) {
+    const emails = (profiles ?? [])
+      .map((p) => p.email)
+      .filter((e): e is string => !!e);
+
+    if (!emails.length) {
       throw new Error('Пользователь не найден');
     }
 
-    // Sign in with the found email
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: profileData.email,
-      password,
-    });
+    let lastInvalidCredentialsError: unknown = null;
 
-    if (error) {
+    for (const email of emails) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (!error) {
+        return data;
+      }
+
+      // If nickname has multiple accounts, wrong password for the first email is common.
+      // Keep trying only for invalid-credentials errors.
+      if (error.message?.includes('Invalid login credentials')) {
+        lastInvalidCredentialsError = error;
+        continue;
+      }
+
       throw error;
     }
 
-    return data;
+    if (lastInvalidCredentialsError) {
+      throw lastInvalidCredentialsError;
+    }
+
+    throw new Error('Invalid login credentials');
   }, []);
 
   const logout = useCallback(async () => {
