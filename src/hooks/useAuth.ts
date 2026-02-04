@@ -97,14 +97,18 @@ export function useAuth() {
   }, []);
 
   const loginWithNickname = useCallback(async (nickname: string, password: string) => {
-    // Find user's email by nickname
+    // Find user's email by nickname (case-insensitive)
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
       .select('email')
-      .eq('nickname', nickname)
-      .maybeSingle();
+      .ilike('nickname', nickname)
+      .limit(1)
+      .single();
 
     if (profileError) {
+      if (profileError.code === 'PGRST116') {
+        throw new Error('Пользователь не найден');
+      }
       throw profileError;
     }
 
