@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FloatingNickname {
@@ -13,6 +14,7 @@ interface FloatingNickname {
 }
 
 const FloatingNicknames = () => {
+  const isMobile = useIsMobile();
   const [nicknames, setNicknames] = useState<string[]>([]);
   const [floatingItems, setFloatingItems] = useState<FloatingNickname[]>([]);
 
@@ -23,7 +25,7 @@ const FloatingNicknames = () => {
         .from('profiles')
         .select('nickname')
         .not('nickname', 'is', null)
-        .limit(50);
+        .limit(30);
 
       if (data) {
         const names = data
@@ -40,38 +42,43 @@ const FloatingNicknames = () => {
   useEffect(() => {
     if (nicknames.length === 0) return;
 
-    const items: FloatingNickname[] = nicknames.map((nickname, index) => ({
+    // Limit items on mobile for performance
+    const maxItems = isMobile ? 8 : nicknames.length;
+    const limitedNames = nicknames.slice(0, maxItems);
+    const items: FloatingNickname[] = limitedNames.map((nickname, index) => ({
       id: `${nickname}-${index}`,
       nickname,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      speedX: (Math.random() - 0.5) * 0.3,
-      speedY: (Math.random() - 0.5) * 0.3,
+      speedX: (Math.random() - 0.5) * 0.15,
+      speedY: (Math.random() - 0.5) * 0.15,
       opacity: 0.08 + Math.random() * 0.12,
       size: 12 + Math.random() * 8,
     }));
 
     setFloatingItems(items);
-  }, [nicknames]);
+  }, [nicknames, isMobile]);
 
-  // Animate floating items
   useEffect(() => {
     if (floatingItems.length === 0) return;
 
-    const interval = setInterval(() => {
-      setFloatingItems(prev => prev.map(item => {
+    // Use slower interval on mobile (250ms vs 80ms)
+    const intervalMs = isMobile ? 250 : 80;
+    
+    const updatePositions = () => {
+      setFloatingItems(prevItems => prevItems.map(item => {
         let newX = item.x + item.speedX;
         let newY = item.y + item.speedY;
         let newSpeedX = item.speedX;
         let newSpeedY = item.speedY;
 
-        // Bounce off edges with slight randomness
+        // Bounce off edges
         if (newX <= 0 || newX >= 100) {
-          newSpeedX = -newSpeedX * (0.8 + Math.random() * 0.4);
+          newSpeedX = -newSpeedX;
           newX = Math.max(0, Math.min(100, newX));
         }
         if (newY <= 0 || newY >= 100) {
-          newSpeedY = -newSpeedY * (0.8 + Math.random() * 0.4);
+          newSpeedY = -newSpeedY;
           newY = Math.max(0, Math.min(100, newY));
         }
 
@@ -83,19 +90,21 @@ const FloatingNicknames = () => {
           speedY: newSpeedY,
         };
       }));
-    }, 50);
+    };
+
+    const interval = setInterval(updatePositions, intervalMs);
 
     return () => clearInterval(interval);
-  }, [floatingItems.length]);
+  }, [floatingItems.length, isMobile]);
 
   if (floatingItems.length === 0) return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none will-change-transform">
       {floatingItems.map(item => (
         <div
           key={item.id}
-          className="absolute whitespace-nowrap font-medium text-white transition-all duration-100 ease-linear select-none"
+          className="absolute whitespace-nowrap font-medium text-white select-none"
           style={{
             left: `${item.x}%`,
             top: `${item.y}%`,
