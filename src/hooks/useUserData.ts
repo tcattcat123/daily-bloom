@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   DEFAULT_RITUALS, 
   DEFAULT_WORK_HABITS, 
@@ -22,7 +23,7 @@ interface DayData {
   name: string;
   dateStr: string;
   completedIndices: number[];
-  enabledHabits?: number[]; // Which habits are enabled for this day
+  enabledHabits?: number[];
 }
 
 interface Statistics {
@@ -37,7 +38,7 @@ interface Statistics {
 
 export interface CalendarEvent {
   id: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   title: string;
   time?: string;
   color: 'green' | 'blue' | 'yellow' | 'orange' | 'gray';
@@ -54,7 +55,7 @@ interface UserDataState {
   weekData: DayData[];
   personalWeekData: DayData[];
   layout: 'vertical' | 'horizontal';
-  lastRitualsResetDate: string; // Track when rituals were last reset
+  lastRitualsResetDate: string;
   statistics: Statistics;
 }
 
@@ -109,107 +110,208 @@ const getDefaultState = (): UserDataState => ({
   statistics: getDefaultStatistics(),
 });
 
+// Process state for daily/weekly resets
+const processStateResets = (parsed: UserDataState): UserDataState => {
+  const currentWeek = generateWeek();
+  const storedWeekStart = parsed.weekData?.[0]?.dateStr;
+  const currentWeekStart = currentWeek[0].dateStr;
+  const todayStr = getTodayDateStr();
+  
+  const safeCalendarEvents = Array.isArray(parsed.calendarEvents) ? parsed.calendarEvents : [];
+  
+  let newState: UserDataState = { 
+    ...getDefaultState(),
+    ...parsed,
+    calendarEvents: safeCalendarEvents,
+  };
+  
+  // Daily reset for morning rituals and pills only
+  if (parsed.lastRitualsResetDate !== todayStr) {
+    const completedRituals = parsed.rituals?.filter((r: Ritual) => r.done).length || 0;
+    const completedPills = parsed.pills?.filter((p: Pill) => p.done).length || 0;
+    
+    const prevStats = parsed.statistics || getDefaultStatistics();
+    const allRitualsDone = parsed.rituals?.length > 0 && completedRituals === parsed.rituals.length;
+    
+    newState = {
+      ...newState,
+      rituals: (parsed.rituals || []).map((r: Ritual) => ({ ...r, done: false })),
+      pills: (parsed.pills || []).map((p: Pill) => ({ ...p, done: false })),
+      lastRitualsResetDate: todayStr,
+      statistics: {
+        ...prevStats,
+        totalRitualsDone: prevStats.totalRitualsDone + completedRituals,
+        totalPillsDone: prevStats.totalPillsDone + completedPills,
+        perfectDays: allRitualsDone ? prevStats.perfectDays + 1 : prevStats.perfectDays,
+        currentStreak: allRitualsDone ? prevStats.currentStreak + 1 : 0,
+        longestStreak: allRitualsDone 
+          ? Math.max(prevStats.longestStreak, prevStats.currentStreak + 1)
+          : prevStats.longestStreak,
+      },
+    };
+  }
+  
+  // Weekly reset
+  if (storedWeekStart !== currentWeekStart) {
+    const totalWorkDone = parsed.weekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
+    const totalPersonalDone = parsed.personalWeekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
+    
+    const prevStats = newState.statistics || getDefaultStatistics();
+    
+    newState = {
+      ...newState,
+      weekData: currentWeek,
+      personalWeekData: currentWeek,
+      statistics: {
+        ...prevStats,
+        totalWorkHabitsDone: prevStats.totalWorkHabitsDone + totalWorkDone,
+        totalPersonalHabitsDone: prevStats.totalPersonalHabitsDone + totalPersonalDone,
+      },
+    };
+  }
+  
+  if (!newState.statistics) {
+    newState.statistics = getDefaultStatistics();
+  }
+  
+  return newState;
+};
+
 export function useUserData() {
   const { user } = useAuth();
   const [state, setState] = useState<UserDataState>(getDefaultState);
   const [isLoaded, setIsLoaded] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isSavingRef = useRef(false);
 
-  const storageKey = user ? `humanos_data_${user.id}` : null;
+  // Save to Supabase (debounced)
+  const saveToSupabase = useCallback(async (data: UserDataState) => {
+    if (!user || isSavingRef.current) return;
+    
+    isSavingRef.current = true;
+    try {
+      // Check if record exists
+      const { data: existing } = await supabase
+        .from('user_data')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let error;
+      if (existing) {
+        // Update existing
+        const result = await supabase
+          .from('user_data')
+          .update({ data: JSON.parse(JSON.stringify(data)) })
+          .eq('user_id', user.id);
+        error = result.error;
+      } else {
+        // Insert new - use raw SQL via RPC to bypass type issues
+        const result = await supabase.rpc('insert_user_data' as never, {
+          p_user_id: user.id,
+          p_data: JSON.parse(JSON.stringify(data)),
+        } as never);
+        error = result.error;
+        
+        // Fallback to direct insert if RPC doesn't exist
+        if (error) {
+          const insertResult = await (supabase as any)
+            .from('user_data')
+            .insert([{
+              user_id: user.id,
+              data: JSON.parse(JSON.stringify(data)),
+            }]);
+          error = insertResult.error;
+        }
+      }
+      
+      if (error) {
+        console.error('Error saving to Supabase:', error);
+      }
+    } catch (err) {
+      console.error('Error saving to Supabase:', err);
+    } finally {
+      isSavingRef.current = false;
+    }
+  }, [user]);
 
   // Load data on mount
   useEffect(() => {
-    if (!storageKey) {
-      setIsLoaded(true);
-      return;
-    }
-
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        // Check if week is current, if not reset progress but keep habits
-        const currentWeek = generateWeek();
-        const storedWeekStart = parsed.weekData?.[0]?.dateStr;
-        const currentWeekStart = currentWeek[0].dateStr;
-        const todayStr = getTodayDateStr();
-        
-        // Ensure calendarEvents is always a valid array
-        const safeCalendarEvents = Array.isArray(parsed.calendarEvents) ? parsed.calendarEvents : [];
-        
-        let newState = { 
-          ...getDefaultState(),
-          ...parsed,
-          calendarEvents: safeCalendarEvents,
-        };
-        
-        // Check if rituals need daily reset (only morning rituals, NOT personal development)
-        if (parsed.lastRitualsResetDate !== todayStr) {
-          // Count completed rituals before reset for statistics
-          const completedRituals = parsed.rituals?.filter((r: Ritual) => r.done).length || 0;
-          const completedPills = parsed.pills?.filter((p: Pill) => p.done).length || 0;
-          
-          // Update statistics
-          const prevStats = parsed.statistics || getDefaultStatistics();
-          const allRitualsDone = parsed.rituals?.length > 0 && completedRituals === parsed.rituals.length;
-          
-          newState = {
-            ...newState,
-            // Only reset morning rituals and pills, NOT personal development
-            rituals: (parsed.rituals || []).map((r: Ritual) => ({ ...r, done: false })),
-            pills: (parsed.pills || []).map((p: Pill) => ({ ...p, done: false })),
-            // Personal development (personalWeekData) is NOT reset daily
-            lastRitualsResetDate: todayStr,
-            statistics: {
-              ...prevStats,
-              totalRitualsDone: prevStats.totalRitualsDone + completedRituals,
-              totalPillsDone: prevStats.totalPillsDone + completedPills,
-              perfectDays: allRitualsDone ? prevStats.perfectDays + 1 : prevStats.perfectDays,
-              currentStreak: allRitualsDone ? prevStats.currentStreak + 1 : 0,
-              longestStreak: allRitualsDone 
-                ? Math.max(prevStats.longestStreak, prevStats.currentStreak + 1)
-                : prevStats.longestStreak,
-            },
-          };
-        }
-        
-        if (storedWeekStart !== currentWeekStart) {
-          // New week - reset weekly progress but keep habits/rituals config
-          // Count completed habits before reset
-          const totalWorkDone = parsed.weekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
-          const totalPersonalDone = parsed.personalWeekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
-          
-          const prevStats = newState.statistics || getDefaultStatistics();
-          
-          newState = {
-            ...newState,
-            weekData: currentWeek,
-            personalWeekData: currentWeek,
-            statistics: {
-              ...prevStats,
-              totalWorkHabitsDone: prevStats.totalWorkHabitsDone + totalWorkDone,
-              totalPersonalHabitsDone: prevStats.totalPersonalHabitsDone + totalPersonalDone,
-            },
-          };
-        }
-        
-        // Ensure statistics exists
-        if (!newState.statistics) {
-          newState.statistics = getDefaultStatistics();
-        }
-        
-        setState(newState);
-      } catch {
-        setState(getDefaultState());
+    const loadData = async () => {
+      if (!user) {
+        setIsLoaded(true);
+        return;
       }
-    }
-    setIsLoaded(true);
-  }, [storageKey]);
 
-  // Save to localStorage whenever state changes
+      try {
+        // Try to load from Supabase first
+        const { data: supabaseData, error } = await supabase
+          .from('user_data')
+          .select('data')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error loading from Supabase:', error);
+        }
+
+        let loadedState: UserDataState | null = null;
+
+        if (supabaseData?.data) {
+          // Data exists in Supabase
+          loadedState = processStateResets(supabaseData.data as unknown as UserDataState);
+        } else {
+          // Check localStorage for migration
+          const localStorageKey = `humanos_data_${user.id}`;
+          const stored = localStorage.getItem(localStorageKey);
+          
+          if (stored) {
+            try {
+              const parsed = JSON.parse(stored);
+              loadedState = processStateResets(parsed);
+              // Migrate to Supabase
+              await saveToSupabase(loadedState);
+              // Clear localStorage after successful migration
+              localStorage.removeItem(localStorageKey);
+              console.log('Data migrated from localStorage to Supabase');
+            } catch {
+              loadedState = getDefaultState();
+            }
+          } else {
+            loadedState = getDefaultState();
+          }
+        }
+
+        setState(loadedState);
+      } catch (err) {
+        console.error('Error loading data:', err);
+        setState(getDefaultState());
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+
+    loadData();
+  }, [user, saveToSupabase]);
+
+  // Save to Supabase when state changes (debounced)
   useEffect(() => {
-    if (!storageKey || !isLoaded) return;
-    localStorage.setItem(storageKey, JSON.stringify(state));
-  }, [state, storageKey, isLoaded]);
+    if (!user || !isLoaded) return;
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    saveTimeoutRef.current = setTimeout(() => {
+      saveToSupabase(state);
+    }, 1000); // Debounce 1 second
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [state, user, isLoaded, saveToSupabase]);
 
   // Rituals
   const setRituals = useCallback((rituals: Ritual[]) => {
@@ -233,10 +335,9 @@ export function useUserData() {
       weekData: prev.weekData.map((day) => ({
         ...day,
         completedIndices: day.completedIndices.filter((i) => i < habits.length),
-        // Preserve existing enabledHabits, just filter invalid indices
         enabledHabits: day.enabledHabits 
           ? day.enabledHabits.filter((i) => i < habits.length)
-          : undefined, // Keep undefined if not set, modal will handle initialization
+          : undefined,
       })),
     }));
   }, []);
@@ -331,7 +432,7 @@ export function useUserData() {
     setState((prev) => ({ ...prev, layout }));
   }, []);
 
-  // Reset week - preserves habit configuration (enabledHabits)
+  // Reset week
   const resetWeek = useCallback(() => {
     setState((prev) => {
       const newWeek = generateWeek();
@@ -339,7 +440,6 @@ export function useUserData() {
         ...prev,
         rituals: prev.rituals.map((r) => ({ ...r, done: false })),
         pills: prev.pills.map((p) => ({ ...p, done: false })),
-        // Preserve enabledHabits from old weekData
         weekData: newWeek.map((day, idx) => ({
           ...day,
           enabledHabits: prev.weekData[idx]?.enabledHabits,
@@ -349,7 +449,7 @@ export function useUserData() {
     });
   }, []);
 
-  // Clear all data (remove demo data)
+  // Clear all data
   const clearAllData = useCallback(() => {
     setState({
       rituals: [],
