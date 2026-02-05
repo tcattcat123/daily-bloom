@@ -141,6 +141,74 @@ export type Database = {
           },
         ]
       }
+      team_members: {
+        Row: {
+          id: string
+          joined_at: string
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          activity: string
+          created_at: string
+          id: string
+          leader_id: string
+          name: string
+        }
+        Insert: {
+          activity: string
+          created_at?: string
+          id?: string
+          leader_id: string
+          name?: string
+        }
+        Update: {
+          activity?: string
+          created_at?: string
+          id?: string
+          leader_id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
