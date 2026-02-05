@@ -25,18 +25,17 @@ const MOTIVATIONAL_MESSAGES = [
 const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: RitualCardProps) => {
   const completedCount = rituals.filter(r => r.done).length;
   const progressPercent = rituals.length > 0 ? Math.round((completedCount / rituals.length) * 100) : 0;
-  
+
   // Get current motivational message based on completed count
-  const currentMotivation = completedCount > 0 && completedCount <= MOTIVATIONAL_MESSAGES.length 
-    ? MOTIVATIONAL_MESSAGES[completedCount - 1] 
+  const currentMotivation = completedCount > 0 && completedCount <= MOTIVATIONAL_MESSAGES.length
+    ? MOTIVATIONAL_MESSAGES[completedCount - 1]
     : null;
 
   return (
-    <div className={`rounded-2xl p-3 transition-all duration-500 relative overflow-hidden ${
-      isComplete 
-        ? 'bg-habit-green shadow-card-green' 
+    <div className={`rounded-2xl p-3 transition-all duration-500 relative overflow-hidden flex flex-col h-full ${isComplete
+        ? 'bg-habit-green shadow-card-green'
         : 'bg-card shadow-card border border-border/50'
-    }`}>
+      }`}>
       {/* Animated sun background when complete - improved */}
       {isComplete && (
         <div className="absolute -top-4 -right-4 pointer-events-none">
@@ -56,37 +55,34 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
           </div>
         </div>
       )}
-      
+
       {/* Header with title only */}
       <div className="flex items-center justify-between mb-2 relative z-10">
-        <div className={`text-[10px] font-bold uppercase tracking-wider ${
-          isComplete ? 'text-white/80' : 'text-muted-foreground'
-        }`}>
+        <div className={`text-[10px] font-bold uppercase tracking-wider ${isComplete ? 'text-white/80' : 'text-muted-foreground'
+          }`}>
           Утренний ритуал
         </div>
       </div>
-      
+
       <div className="flex flex-col gap-1.5 relative z-10">
         {rituals.map((ritual, idx) => (
           <div
             key={idx}
             onClick={() => onToggle(idx)}
-            className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ${
-              ritual.done 
+            className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ${ritual.done
                 ? isComplete ? 'text-white' : 'text-foreground'
                 : isComplete ? 'text-white/70' : 'text-muted-foreground'
-            } ${ritual.done ? 'transform scale-[1.02]' : ''}`}
+              } ${ritual.done ? 'transform scale-[1.02]' : ''}`}
           >
             <button
-              className={`w-4 h-4 rounded flex items-center justify-center transition-all ${
-                ritual.done 
-                  ? isComplete 
-                    ? 'bg-white' 
+              className={`w-4 h-4 rounded flex items-center justify-center transition-all ${ritual.done
+                  ? isComplete
+                    ? 'bg-white'
                     : 'bg-habit-green'
                   : isComplete
                     ? 'bg-white/20'
                     : 'border border-muted-foreground/30 hover:border-muted-foreground'
-              }`}
+                }`}
             >
               {ritual.done && (
                 <Check className={`w-2.5 h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'}`} />
@@ -98,10 +94,10 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
           </div>
         ))}
       </div>
-      
+
       {/* Motivational message - shows after each completion */}
       {currentMotivation && !isComplete && (
-        <div className="mt-2 pt-2 border-t border-border/30 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="mt-auto pt-2 border-t border-border/30 relative z-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
           <div className="flex items-center gap-2">
             {/* Circular progress */}
             <div className="relative w-8 h-8 flex-shrink-0">
@@ -141,10 +137,10 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
           </div>
         </div>
       )}
-      
+
       {/* Completion celebration text */}
       {isComplete && (
-        <div className="mt-2 pt-2 border-t border-white/20 relative z-10">
+        <div className="mt-auto pt-2 border-t border-white/20 relative z-10">
           <div className="flex items-center gap-1.5">
             <Trophy className="w-3 h-3 text-white" />
             <span className="text-[10px] font-bold text-white">✨ Утро прошло идеально!</span>

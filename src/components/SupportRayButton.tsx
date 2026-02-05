@@ -47,9 +47,9 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
 
   const handleSendRayToUser = async (receiverId: string, receiverNickname: string) => {
     if (!user?.id) return;
-    
+
     setIsSending(true);
-    
+
     const { error } = await supabase
       .from('support_rays')
       .insert({
@@ -72,7 +72,9 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
     setSparkles(newSparkles);
 
     setTimeout(() => {
-      toast.success(`Луч отправлен ${receiverNickname}! ✨`);
+      toast.success(`Луч отправлен ${receiverNickname}! ✨`, {
+        description: 'Пользователь получил ваше тепло — это значит в вас верят!'
+      });
       setIsSending(false);
       setSparkles([]);
       setIsDialogOpen(false);
@@ -88,7 +90,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
       y: Math.random() * 100 - 50,
     }));
     setSparkles(newSparkles);
-    
+
     setTimeout(() => {
       toast.success('Луч поддержки отправлен! ✨', {
         description: 'Случайный пользователь получит ваше тепло',
@@ -98,7 +100,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
     }, 800);
   };
 
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     u.nickname?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -113,7 +115,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
           <Sparkles className={`w-4 h-4 transition-all duration-300 ${isSending ? 'animate-pulse text-yellow-400' : 'group-hover:text-yellow-400'}`} />
           <span>Отправить луч поддержки</span>
         </button>
-        
+
         {sparkles.map((sparkle) => (
           <span
             key={sparkle.id}
@@ -141,7 +143,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
             <Sparkles className={`w-3.5 h-3.5 transition-all duration-300 ${isSending ? 'animate-pulse text-yellow-400' : 'group-hover:text-yellow-400 group-hover:scale-110'}`} />
             <span>Луч поддержки</span>
           </button>
-          
+
           {sparkles.map((sparkle) => (
             <span
               key={sparkle.id}
@@ -162,7 +164,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
                 Отправить луч поддержки
               </DialogTitle>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -218,7 +220,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
           <Sparkles className={`w-3.5 h-3.5 ${isSending ? 'animate-pulse' : ''}`} />
           Луч поддержки
         </Button>
-        
+
         {sparkles.map((sparkle) => (
           <span
             key={sparkle.id}
@@ -239,7 +241,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
               Отправить луч поддержки
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

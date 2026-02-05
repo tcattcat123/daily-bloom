@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  DEFAULT_RITUALS, 
-  DEFAULT_WORK_HABITS, 
-  DEFAULT_PERSONAL_HABITS, 
-  DEFAULT_PILLS 
+import {
+  DEFAULT_RITUALS,
+  DEFAULT_WORK_HABITS,
+  DEFAULT_PERSONAL_HABITS,
+  DEFAULT_PILLS
 } from '@/types/database';
 
 interface Ritual {
@@ -55,6 +55,7 @@ interface UserDataState {
   weekData: DayData[];
   personalWeekData: DayData[];
   layout: 'vertical' | 'horizontal';
+  theme: 'standard' | 'focus';
   lastRitualsResetDate: string;
   statistics: Statistics;
 }
@@ -106,6 +107,7 @@ const getDefaultState = (): UserDataState => ({
   weekData: generateWeek(),
   personalWeekData: generateWeek(),
   layout: 'vertical',
+  theme: 'standard',
   lastRitualsResetDate: getTodayDateStr(),
   statistics: getDefaultStatistics(),
 });
@@ -116,23 +118,23 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
   const storedWeekStart = parsed.weekData?.[0]?.dateStr;
   const currentWeekStart = currentWeek[0].dateStr;
   const todayStr = getTodayDateStr();
-  
+
   const safeCalendarEvents = Array.isArray(parsed.calendarEvents) ? parsed.calendarEvents : [];
-  
-  let newState: UserDataState = { 
+
+  let newState: UserDataState = {
     ...getDefaultState(),
     ...parsed,
     calendarEvents: safeCalendarEvents,
   };
-  
+
   // Daily reset for morning rituals and pills only
   if (parsed.lastRitualsResetDate !== todayStr) {
     const completedRituals = parsed.rituals?.filter((r: Ritual) => r.done).length || 0;
     const completedPills = parsed.pills?.filter((p: Pill) => p.done).length || 0;
-    
+
     const prevStats = parsed.statistics || getDefaultStatistics();
     const allRitualsDone = parsed.rituals?.length > 0 && completedRituals === parsed.rituals.length;
-    
+
     newState = {
       ...newState,
       rituals: (parsed.rituals || []).map((r: Ritual) => ({ ...r, done: false })),
@@ -144,20 +146,20 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
         totalPillsDone: prevStats.totalPillsDone + completedPills,
         perfectDays: allRitualsDone ? prevStats.perfectDays + 1 : prevStats.perfectDays,
         currentStreak: allRitualsDone ? prevStats.currentStreak + 1 : 0,
-        longestStreak: allRitualsDone 
+        longestStreak: allRitualsDone
           ? Math.max(prevStats.longestStreak, prevStats.currentStreak + 1)
           : prevStats.longestStreak,
       },
     };
   }
-  
+
   // Weekly reset
   if (storedWeekStart !== currentWeekStart) {
     const totalWorkDone = parsed.weekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
     const totalPersonalDone = parsed.personalWeekData?.reduce((sum: number, day: DayData) => sum + day.completedIndices.length, 0) || 0;
-    
+
     const prevStats = newState.statistics || getDefaultStatistics();
-    
+
     newState = {
       ...newState,
       weekData: currentWeek,
@@ -169,11 +171,11 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
       },
     };
   }
-  
+
   if (!newState.statistics) {
     newState.statistics = getDefaultStatistics();
   }
-  
+
   return newState;
 };
 
@@ -187,7 +189,7 @@ export function useUserData() {
   // Save to Supabase (debounced)
   const saveToSupabase = useCallback(async (data: UserDataState) => {
     if (!user || isSavingRef.current) return;
-    
+
     isSavingRef.current = true;
     try {
       // Check if record exists
@@ -212,7 +214,7 @@ export function useUserData() {
           p_data: JSON.parse(JSON.stringify(data)),
         } as never);
         error = result.error;
-        
+
         // Fallback to direct insert if RPC doesn't exist
         if (error) {
           const insertResult = await (supabase as any)
@@ -224,7 +226,7 @@ export function useUserData() {
           error = insertResult.error;
         }
       }
-      
+
       if (error) {
         console.error('Error saving to Supabase:', error);
       }
@@ -264,7 +266,7 @@ export function useUserData() {
           // Check localStorage for migration
           const localStorageKey = `humanos_data_${user.id}`;
           const stored = localStorage.getItem(localStorageKey);
-          
+
           if (stored) {
             try {
               const parsed = JSON.parse(stored);
@@ -321,7 +323,7 @@ export function useUserData() {
   const toggleRitual = useCallback((index: number) => {
     setState((prev) => ({
       ...prev,
-      rituals: prev.rituals.map((r, i) => 
+      rituals: prev.rituals.map((r, i) =>
         i === index ? { ...r, done: !r.done } : r
       ),
     }));
@@ -335,7 +337,7 @@ export function useUserData() {
       weekData: prev.weekData.map((day) => ({
         ...day,
         completedIndices: day.completedIndices.filter((i) => i < habits.length),
-        enabledHabits: day.enabledHabits 
+        enabledHabits: day.enabledHabits
           ? day.enabledHabits.filter((i) => i < habits.length)
           : undefined,
       })),
@@ -394,7 +396,7 @@ export function useUserData() {
   const togglePill = useCallback((index: number) => {
     setState((prev) => ({
       ...prev,
-      pills: prev.pills.map((p, i) => 
+      pills: prev.pills.map((p, i) =>
         i === index ? { ...p, done: !p.done } : p
       ),
     }));
@@ -432,6 +434,11 @@ export function useUserData() {
     setState((prev) => ({ ...prev, layout }));
   }, []);
 
+  // Theme
+  const setTheme = useCallback((theme: 'standard' | 'focus') => {
+    setState((prev) => ({ ...prev, theme }));
+  }, []);
+
   // Reset week
   const resetWeek = useCallback(() => {
     setState((prev) => {
@@ -462,6 +469,7 @@ export function useUserData() {
       weekData: generateWeek(),
       personalWeekData: generateWeek(),
       layout: 'vertical',
+      theme: 'standard',
       lastRitualsResetDate: getTodayDateStr(),
       statistics: getDefaultStatistics(),
     });
@@ -484,6 +492,7 @@ export function useUserData() {
     addCalendarEvent,
     removeCalendarEvent,
     setLayout,
+    setTheme,
     resetWeek,
     clearAllData,
   };

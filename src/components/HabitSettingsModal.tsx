@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2, Check } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2, Check, Zap, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ interface HabitSettingsModalProps {
   pillsEnabled: boolean;
   calendarEnabled: boolean;
   layout: "vertical" | "horizontal";
+  theme: "standard" | "focus";
   weekData: DayData[];
   statistics?: Statistics;
   onSaveHabits: (habits: string[]) => void;
@@ -56,6 +57,7 @@ interface HabitSettingsModalProps {
   onTogglePills: (enabled: boolean) => void;
   onToggleCalendar: (enabled: boolean) => void;
   onSetLayout: (layout: "vertical" | "horizontal") => void;
+  onSetTheme: (theme: "standard" | "focus") => void;
   onSaveWeekData: (weekData: DayData[]) => void;
   onResetWeek: () => void;
   onLogout: () => void;
@@ -64,7 +66,7 @@ interface HabitSettingsModalProps {
 // Theme toggle component
 const ThemeToggleSection = () => {
   const { theme, setTheme } = useTheme();
-  
+
   return (
     <div>
       <Label className="text-sm font-medium mb-2 block">Тема оформления</Label>
@@ -95,11 +97,11 @@ const ThemeToggleSection = () => {
 // Statistics section component
 const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
   if (!statistics) return null;
-  
+
   return (
     <div className="space-y-4">
       <Label className="text-sm font-medium mb-2 block">Ваша статистика</Label>
-      
+
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-gradient-to-br from-habit-green/20 to-habit-green/5 rounded-xl p-3 border border-habit-green/20">
           <div className="flex items-center gap-2 mb-1">
@@ -109,7 +111,7 @@ const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
           <div className="text-2xl font-bold text-habit-green">{statistics.currentStreak}</div>
           <div className="text-[10px] text-muted-foreground">дней подряд</div>
         </div>
-        
+
         <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl p-3 border border-primary/20">
           <div className="flex items-center gap-2 mb-1">
             <TrendingUp className="w-4 h-4 text-primary" />
@@ -118,7 +120,7 @@ const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
           <div className="text-2xl font-bold text-primary">{statistics.longestStreak}</div>
           <div className="text-[10px] text-muted-foreground">максимум дней</div>
         </div>
-        
+
         <div className="bg-gradient-to-br from-ritual-gold/20 to-ritual-gold/5 rounded-xl p-3 border border-ritual-gold/20">
           <div className="flex items-center gap-2 mb-1">
             <Calendar className="w-4 h-4 text-ritual-gold" />
@@ -127,7 +129,7 @@ const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
           <div className="text-2xl font-bold text-ritual-gold">{statistics.perfectDays}</div>
           <div className="text-[10px] text-muted-foreground">все ритуалы</div>
         </div>
-        
+
         <div className="bg-gradient-to-br from-accent/20 to-accent/5 rounded-xl p-3 border border-accent/20">
           <div className="flex items-center gap-2 mb-1">
             <CheckCircle2 className="w-4 h-4 text-accent-foreground" />
@@ -137,7 +139,7 @@ const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
           <div className="text-[10px] text-muted-foreground">выполнено</div>
         </div>
       </div>
-      
+
       <div className="space-y-2 pt-2">
         <div className="flex justify-between items-center text-xs">
           <span className="text-muted-foreground">Рабочие привычки</span>
@@ -156,25 +158,27 @@ const StatisticsSection = ({ statistics }: { statistics?: Statistics }) => {
   );
 };
 
-const HabitSettingsModal = ({ 
-  open, 
-  onClose, 
-  habits, 
+const HabitSettingsModal = ({
+  open,
+  onClose,
+  habits,
   personalHabits,
   rituals,
   pills,
   pillsEnabled,
   calendarEnabled,
   layout,
+  theme,
   weekData,
   statistics,
-  onSaveHabits, 
+  onSaveHabits,
   onSavePersonalHabits,
   onSaveRituals,
   onSavePills,
   onTogglePills,
   onToggleCalendar,
   onSetLayout,
+  onSetTheme,
   onSaveWeekData,
   onResetWeek,
   onLogout
@@ -186,6 +190,7 @@ const HabitSettingsModal = ({
   const [localPillsEnabled, setLocalPillsEnabled] = useState(pillsEnabled);
   const [localCalendarEnabled, setLocalCalendarEnabled] = useState(calendarEnabled);
   const [localLayout, setLocalLayout] = useState(layout);
+  const [localTheme, setLocalTheme] = useState(theme);
   const [localWeekData, setLocalWeekData] = useState<DayData[]>(weekData);
   const [newHabit, setNewHabit] = useState("");
   const [newPersonalHabit, setNewPersonalHabit] = useState("");
@@ -193,7 +198,7 @@ const HabitSettingsModal = ({
   const [newPillName, setNewPillName] = useState("");
   const [newPillTime, setNewPillTime] = useState("утро");
   const [selectedDays, setSelectedDays] = useState<number[]>([0]); // Multiple day selection
-  
+
   // Inline editing states
   const [editingRitualIdx, setEditingRitualIdx] = useState<number | null>(null);
   const [editingHabitIdx, setEditingHabitIdx] = useState<number | null>(null);
@@ -211,13 +216,14 @@ const HabitSettingsModal = ({
       setLocalPillsEnabled(pillsEnabled);
       setLocalCalendarEnabled(calendarEnabled);
       setLocalLayout(layout);
+      setLocalTheme(theme);
       // Initialize enabledHabits if not present
       setLocalWeekData(weekData.map((day, idx) => ({
         ...day,
         enabledHabits: day.enabledHabits ?? habits.map((_, i) => i)
       })));
     }
-  }, [open, habits, personalHabits, rituals, pills, pillsEnabled, calendarEnabled, layout, weekData]);
+  }, [open, habits, personalHabits, rituals, pills, pillsEnabled, calendarEnabled, layout, theme, weekData]);
 
   const toggleDaySelection = (dayIdx: number) => {
     setSelectedDays(prev => {
@@ -284,19 +290,19 @@ const HabitSettingsModal = ({
   const toggleHabitForSelectedDays = (habitIdx: number) => {
     setLocalWeekData(prev => {
       const newWeekData = [...prev];
-      
+
       // Check if habit is enabled in ALL selected days
       const enabledInAll = selectedDays.every(dayIdx => {
         const day = newWeekData[dayIdx];
         const enabled = day.enabledHabits ?? localHabits.map((_, i) => i);
         return enabled.includes(habitIdx);
       });
-      
+
       // Toggle for all selected days
       selectedDays.forEach(dayIdx => {
         const day = { ...newWeekData[dayIdx] };
         const enabled = day.enabledHabits ? [...day.enabledHabits] : localHabits.map((_, i) => i);
-        
+
         if (enabledInAll) {
           // Remove from all selected days
           day.enabledHabits = enabled.filter(i => i !== habitIdx);
@@ -308,10 +314,10 @@ const HabitSettingsModal = ({
             day.enabledHabits = enabled;
           }
         }
-        
+
         newWeekData[dayIdx] = day;
       });
-      
+
       return newWeekData;
     });
   };
@@ -324,6 +330,7 @@ const HabitSettingsModal = ({
     onTogglePills(localPillsEnabled);
     onToggleCalendar(localCalendarEnabled);
     onSetLayout(localLayout);
+    onSetTheme(localTheme);
     onSaveWeekData(localWeekData);
     onClose();
   };
@@ -347,7 +354,7 @@ const HabitSettingsModal = ({
         <DialogHeader>
           <DialogTitle>Настройки</DialogTitle>
         </DialogHeader>
-        
+
         <Tabs defaultValue="rituals" className="mt-4">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="rituals" className="text-xs">Утро</TabsTrigger>
@@ -356,7 +363,7 @@ const HabitSettingsModal = ({
             <TabsTrigger value="pills" className="text-xs">Таблетки</TabsTrigger>
             <TabsTrigger value="other" className="text-xs">Прочее</TabsTrigger>
           </TabsList>
-          
+
           {/* Rituals Tab */}
           <TabsContent value="rituals" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
@@ -375,7 +382,7 @@ const HabitSettingsModal = ({
                       className="flex-1 bg-ritual-gold/10"
                     />
                   ) : (
-                    <div 
+                    <div
                       onClick={() => setEditingRitualIdx(idx)}
                       className="flex-1 px-3 py-2 bg-ritual-gold/10 rounded-lg text-sm text-foreground cursor-pointer hover:bg-ritual-gold/20 transition-colors"
                     >
@@ -392,7 +399,7 @@ const HabitSettingsModal = ({
                   </Button>
                 </div>
               ))}
-              
+
               <div className="flex items-center gap-2 mt-2">
                 <Input
                   placeholder="Новый утренний ритуал..."
@@ -407,24 +414,23 @@ const HabitSettingsModal = ({
               </div>
             </div>
           </TabsContent>
-          
+
           {/* Work Habits Tab */}
           <TabsContent value="work" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
               Выберите дни тапом, затем настройте привычки для них
             </p>
-            
+
             {/* Multi-day selector */}
             <div className="flex gap-1 mb-4">
               {dayShortNames.map((day, idx) => (
                 <button
                   key={idx}
                   onClick={() => toggleDaySelection(idx)}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
-                    selectedDays.includes(idx)
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${selectedDays.includes(idx)
                       ? 'bg-habit-green text-white'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                  }`}
+                    }`}
                 >
                   {day}
                 </button>
@@ -434,7 +440,7 @@ const HabitSettingsModal = ({
             {/* Habits list with checkboxes for selected days */}
             <div className="flex flex-col gap-2 mb-4">
               <Label className="text-xs text-muted-foreground">
-                {selectedDays.length === 1 
+                {selectedDays.length === 1
                   ? `Задачи на ${localWeekData[selectedDays[0]]?.name || dayShortNames[selectedDays[0]]}:`
                   : `Задачи на выбранные дни (${selectedDays.map(d => dayShortNames[d]).join(', ')}):`
                 }
@@ -455,19 +461,18 @@ const HabitSettingsModal = ({
                     const dayEnabled = localWeekData[dayIdx]?.enabledHabits;
                     return dayEnabled !== undefined ? dayEnabled.includes(idx) : true;
                   });
-                  
+
                   return (
                     <div key={idx} className="flex items-center gap-2 group">
                       <button
                         type="button"
                         onClick={() => toggleHabitForSelectedDays(idx)}
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                          enabledInAll 
-                            ? 'bg-habit-green border-habit-green' 
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${enabledInAll
+                            ? 'bg-habit-green border-habit-green'
                             : enabledInSome
                               ? 'bg-habit-green/50 border-habit-green'
                               : 'border-muted-foreground/40 hover:border-muted-foreground'
-                        }`}
+                          }`}
                       >
                         {enabledInAll && (
                           <Check className="w-3 h-3 text-white" />
@@ -486,15 +491,14 @@ const HabitSettingsModal = ({
                           className="flex-1"
                         />
                       ) : (
-                        <div 
+                        <div
                           onClick={() => setEditingHabitIdx(idx)}
-                          className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
-                            enabledInAll 
-                              ? 'bg-muted hover:bg-muted/80' 
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${enabledInAll
+                              ? 'bg-muted hover:bg-muted/80'
                               : enabledInSome
                                 ? 'bg-muted/60 hover:bg-muted/70'
                                 : 'bg-muted/30 text-muted-foreground/50 hover:bg-muted/50'
-                          }`}
+                            }`}
                         >
                           {habit}
                         </div>
@@ -514,7 +518,7 @@ const HabitSettingsModal = ({
             </div>
 
             <Separator className="my-3" />
-            
+
             {/* Add new habit */}
             <Label className="text-xs text-muted-foreground mb-2 block">Добавить новую привычку:</Label>
             <div className="flex items-center gap-2">
@@ -530,7 +534,7 @@ const HabitSettingsModal = ({
               </Button>
             </div>
           </TabsContent>
-          
+
           {/* Personal Habits Tab */}
           <TabsContent value="personal" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
@@ -549,7 +553,7 @@ const HabitSettingsModal = ({
                       className="flex-1"
                     />
                   ) : (
-                    <div 
+                    <div
                       onClick={() => setEditingPersonalHabitIdx(idx)}
                       className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm cursor-pointer hover:bg-muted/80 transition-colors"
                     >
@@ -566,7 +570,7 @@ const HabitSettingsModal = ({
                   </Button>
                 </div>
               ))}
-              
+
               <div className="flex items-center gap-2 mt-2">
                 <Input
                   placeholder="Новая личная привычка..."
@@ -581,7 +585,7 @@ const HabitSettingsModal = ({
               </div>
             </div>
           </TabsContent>
-          
+
           {/* Pills Tab */}
           <TabsContent value="pills" className="mt-4">
             <div className="flex items-center justify-between mb-4">
@@ -594,7 +598,7 @@ const HabitSettingsModal = ({
                 onCheckedChange={setLocalPillsEnabled}
               />
             </div>
-            
+
             {localPillsEnabled && (
               <div className="flex flex-col gap-2">
                 {localPills.map((pill, idx) => (
@@ -620,7 +624,7 @@ const HabitSettingsModal = ({
                         </select>
                       </div>
                     ) : (
-                      <div 
+                      <div
                         onClick={() => setEditingPillIdx(idx)}
                         className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm flex justify-between cursor-pointer hover:bg-muted/80 transition-colors"
                       >
@@ -638,7 +642,7 @@ const HabitSettingsModal = ({
                     </Button>
                   </div>
                 ))}
-                
+
                 <div className="flex items-center gap-2 mt-2">
                   <Input
                     placeholder="Название..."
@@ -667,13 +671,13 @@ const HabitSettingsModal = ({
           {/* Other Settings Tab */}
           <TabsContent value="other" className="mt-4">
             <StatisticsSection statistics={statistics} />
-            
+
             <Separator className="my-4" />
-            
+
             <ThemeToggleSection />
-            
+
             <Separator className="my-4" />
-            
+
             <div className="flex flex-col gap-4">
               {/* Calendar Toggle */}
               <div className="flex items-center justify-between">
@@ -686,9 +690,39 @@ const HabitSettingsModal = ({
                   onCheckedChange={setLocalCalendarEnabled}
                 />
               </div>
-              
+
               <Separator />
-              
+
+              {/* Theme (Focus/Standard) */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Стиль интерфейса</Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={localTheme === "standard" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLocalTheme("standard")}
+                    className="flex-1 gap-2"
+                  >
+                    <LayoutList className="w-4 h-4" />
+                    Стандарт
+                  </Button>
+                  <Button
+                    variant={localTheme === "focus" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setLocalTheme("focus")}
+                    className="flex-1 gap-2"
+                  >
+                    <Zap className="w-4 h-4" />
+                    Фокус
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Фокус: элементы крупнее, выполненные дни подсвечиваются зеленым
+                </p>
+              </div>
+
+              <Separator />
+
               {/* Layout Toggle */}
               <div>
                 <Label className="text-sm font-medium mb-2 block">Вид отображения</Label>
@@ -749,7 +783,7 @@ const HabitSettingsModal = ({
             </div>
           </TabsContent>
         </Tabs>
-        
+
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="outline" onClick={onClose}>
             Отмена

@@ -9,13 +9,14 @@ import Index from "./pages/Index";
 import Welcome from "./pages/Welcome";
 import Teams from "./pages/Teams";
 import NotFound from "./pages/NotFound";
+import SupportRayNotifications from "@/components/SupportRayNotifications";
 
 const queryClient = new QueryClient();
 
 // Protected route wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -23,18 +24,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/welcome" replace />;
   }
-  
-  return <>{children}</>;
+
+  return (
+    <>
+      {children}
+      <SupportRayNotifications />
+    </>
+  );
 };
 
 // Public route - redirect to home if already logged in
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -42,11 +48,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  
+
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
