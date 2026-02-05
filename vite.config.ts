@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -11,10 +12,10 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  // NOTE: We intentionally disable lovable-tagger in dev because it injects
-  // external scripts (cdn.gpteng.co) that may be blocked on some mobile networks/regions,
-  // causing a blank screen.
-  plugins: [react()],
+  plugins: [
+    react(),
+    mode === 'development' && componentTagger(),
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
