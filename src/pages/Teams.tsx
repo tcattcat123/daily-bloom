@@ -22,6 +22,7 @@
    leader_nickname: string;
    member_count: number;
    is_member: boolean;
+  members: { id: string; nickname: string }[];
  }
  
  const Teams = () => {
@@ -53,7 +54,16 @@
          .from('team_members')
          .select('team_id, user_id');
  
-       const profilesMap = new Map((profilesData || []).map(p => [p.id, p.nickname]));
+      // Get all member user IDs
+      const memberUserIds = [...new Set((membersData || []).map(m => m.user_id))];
+      const allUserIds = [...new Set([...leaderIds, ...memberUserIds])];
+      
+      const { data: allProfilesData } = await supabase
+        .from('profiles')
+        .select('id, nickname')
+        .in('id', allUserIds);
+
+      const profilesMap = new Map((allProfilesData || []).map(p => [p.id, p.nickname || 'Аноним']));
  
        const teamsWithInfo: Team[] = (teamsData || []).map((team) => {
          const teamMembers = (membersData || []).filter(m => m.team_id === team.id);
@@ -63,9 +73,13 @@
            id: team.id,
            activity: team.activity,
            leader_id: team.leader_id,
-           leader_nickname: profilesMap.get(team.leader_id) || 'Аноним',
+          leader_nickname: profilesMap.get(team.leader_id) ?? 'Аноним',
            member_count: teamMembers.length,
            is_member: isMember || team.leader_id === user?.id,
+          members: teamMembers.map(m => ({
+            id: m.user_id,
+            nickname: profilesMap.get(m.user_id) ?? 'Аноним',
+          })),
          };
        });
  
@@ -240,6 +254,28 @@
                    <p className="text-xs text-muted-foreground truncate">
                      {team.activity}
                    </p>
+                  
+                  {/* Member avatars */}
+                  {team.members.length > 0 && (
+                    <div className="flex items-center gap-0.5 mt-1">
+                      {team.members.slice(0, 5).map((member, idx) => (
+                        <Avatar 
+                          key={member.id} 
+                          className="w-5 h-5 border border-background"
+                          style={{ marginLeft: idx > 0 ? '-4px' : '0' }}
+                        >
+                          <AvatarFallback className="bg-muted text-muted-foreground text-[8px] font-medium">
+                            {member.nickname.charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      ))}
+                      {team.members.length > 5 && (
+                        <span className="text-[10px] text-muted-foreground ml-1">
+                          +{team.members.length - 5}
+                        </span>
+                      )}
+                    </div>
+                  )}
                  </div>
  
                  {user && team.leader_id !== user.id && (
