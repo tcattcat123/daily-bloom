@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-import { Sparkles, ArrowRight, Mail, Lock, User } from 'lucide-react';
+import { Sparkles, ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { z } from 'zod';
 import FloatingNicknames from '@/components/FloatingNicknames';
 import SupportRayButton from '@/components/SupportRayButton';
@@ -29,6 +29,7 @@ const Welcome = () => {
   const [loginMethod, setLoginMethod] = useState<'nickname' | 'email'>('nickname');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -195,19 +196,30 @@ const Welcome = () => {
               </div>
             )}
 
-            <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-              <Input
-                type="password"
-                placeholder="Пароль"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError('');
-                }}
-                className="h-14 text-base pl-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
-              />
-            </div>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Пароль"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  className="h-14 text-base pl-12 pr-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors focus:outline-none"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
 
             {error && (
               <p className="text-red-400 text-sm bg-red-500/10 p-4 rounded-xl border border-red-500/20">{error}</p>

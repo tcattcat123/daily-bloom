@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,7 +33,7 @@ export function useAuth() {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         // Defer profile fetch with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
@@ -42,7 +42,7 @@ export function useAuth() {
         } else {
           setProfile(null);
         }
-        
+
         setIsLoading(false);
       }
     );
@@ -51,11 +51,11 @@ export function useAuth() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      
+
       if (session?.user) {
         fetchProfile(session.user.id);
       }
-      
+
       setIsLoading(false);
     });
 
@@ -64,7 +64,7 @@ export function useAuth() {
 
   const register = useCallback(async (email: string, password: string, nickname: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -156,7 +156,7 @@ export function useAuth() {
 
   const updateNickname = useCallback(async (nickname: string) => {
     if (!user) return;
-    
+
     const { error } = await supabase
       .from('profiles')
       .update({ nickname })
@@ -167,12 +167,12 @@ export function useAuth() {
     }
   }, [user]);
 
-  return {
-    user: profile ? { 
-      id: user?.id || '', 
-      nickname: profile.nickname || '', 
+  const authObject = useMemo(() => ({
+    user: profile ? {
+      id: user?.id || '',
+      nickname: profile.nickname || '',
       created_at: profile.created_at,
-      updated_at: profile.created_at 
+      updated_at: profile.created_at
     } : null,
     session,
     isLoading,
@@ -182,5 +182,7 @@ export function useAuth() {
     loginWithNickname,
     logout,
     updateNickname,
-  };
+  }), [profile, user, session, isLoading, register, login, loginWithNickname, logout, updateNickname]);
+
+  return authObject;
 }
