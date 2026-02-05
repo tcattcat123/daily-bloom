@@ -111,9 +111,9 @@ const Welcome = () => {
               <Sparkles className="w-7 h-7 text-black" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Daily Bloom</h1>
+          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">HumanOS</h1>
           <p className="text-white/50 text-sm font-medium tracking-wide uppercase mb-5">
-            Ваш личный планировщик привычек
+            Система выработки железной дисциплины
           </p>
           {/* Support Ray Button */}
           <SupportRayButton variant="welcome" />
@@ -137,8 +137,8 @@ const Welcome = () => {
                 type="button"
                 onClick={() => { setLoginMethod('nickname'); setError(''); }}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${loginMethod === 'nickname'
-                    ? 'bg-white/10 text-white border border-white/20'
-                    : 'text-white/40 hover:text-white/60'
+                  ? 'bg-white/10 text-white border border-white/20'
+                  : 'text-white/40 hover:text-white/60'
                   }`}
               >
                 По нику
@@ -147,8 +147,8 @@ const Welcome = () => {
                 type="button"
                 onClick={() => { setLoginMethod('email'); setError(''); }}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${loginMethod === 'email'
-                    ? 'bg-white/10 text-white border border-white/20'
-                    : 'text-white/40 hover:text-white/60'
+                  ? 'bg-white/10 text-white border border-white/20'
+                  : 'text-white/40 hover:text-white/60'
                   }`}
               >
                 По email

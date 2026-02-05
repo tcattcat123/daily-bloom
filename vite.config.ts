@@ -21,8 +21,8 @@ export default defineConfig(({ mode }) => ({
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'robots.txt', 'favicon.png'],
       manifest: {
-        name: 'Daily Bloom',
-        short_name: 'Daily Bloom',
+        name: 'HumanOS',
+        short_name: 'HumanOS',
         description: 'Ваш личный планировщик привычек и командной работы',
         theme_color: '#10b981',
         icons: [

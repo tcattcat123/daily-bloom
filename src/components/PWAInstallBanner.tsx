@@ -14,6 +14,13 @@ const PWAInstallBanner = () => {
             return;
         }
 
+        // Only show on mobile/tablet platforms (screen width < 1024px)
+        const isMobileSize = window.innerWidth < 1024;
+        if (!isMobileSize) {
+            setShowBanner(false);
+            return;
+        }
+
         const handler = (e: any) => {
             // Prevent the mini-infobar from appearing on mobile
             e.preventDefault();
@@ -31,10 +38,21 @@ const PWAInstallBanner = () => {
             setShowBanner(true);
         }
 
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setShowBanner(false);
+            } else if (deferredPrompt || isIOS) {
+                setShowBanner(true);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handler);
+            window.removeEventListener('resize', handleResize);
         };
-    }, []);
+    }, [deferredPrompt]);
 
     const handleInstall = async () => {
         if (!deferredPrompt) {
@@ -64,8 +82,8 @@ const PWAInstallBanner = () => {
         <div className="fixed top-0 left-0 right-0 z-[100] animate-in slide-in-from-top duration-500">
             <div className="bg-habit-green text-white px-4 py-2 flex items-center justify-between shadow-lg">
                 <div className="flex items-center gap-2">
-                    <div className="bg-white/20 p-1 rounded-full">
-                        <Zap className="w-4 h-4 text-white fill-white" />
+                    <div className="bg-white/20 p-1 rounded-full text-white">
+                        <Zap className="w-4 h-4 fill-white" />
                     </div>
                     <span className="text-sm font-bold tracking-tight">Открыть в приложении</span>
                 </div>
