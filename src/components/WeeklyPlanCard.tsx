@@ -132,9 +132,16 @@ const WeeklyPlanCard = ({
           </div>
         </div>
 
-        {/* Right side - circular progress (Much Larger) */}
+        {/* Right side - circular progress (Responsive size) */}
         <div className="flex-shrink-0">
-          <CircularProgress value={planPercent} size={140} strokeWidth={10} />
+          {/* Desktop size (size=140) */}
+          <div className="hidden lg:block">
+            <CircularProgress value={planPercent} size={140} strokeWidth={10} />
+          </div>
+          {/* Tablet/Mobile size (size=80) */}
+          <div className="block lg:hidden">
+            <CircularProgress value={planPercent} size={80} strokeWidth={6} />
+          </div>
         </div>
       </div>
 
