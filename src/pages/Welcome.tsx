@@ -74,7 +74,7 @@ const Welcome = () => {
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Произошла ошибка';
-      
+
       if (errorMessage.includes('User already registered')) {
         setError('Пользователь с таким email уже существует');
       } else if (errorMessage.includes('Invalid login credentials')) {
@@ -96,7 +96,7 @@ const Welcome = () => {
 
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] via-transparent to-white/[0.02]" />
-      
+
       {/* Subtle grid pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
@@ -111,9 +111,9 @@ const Welcome = () => {
               <Sparkles className="w-7 h-7 text-black" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">HumanOS</h1>
+          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Daily Bloom</h1>
           <p className="text-white/50 text-sm font-medium tracking-wide uppercase mb-5">
-            Система выработки железной дисциплины
+            Ваш личный планировщик привычек
           </p>
           {/* Support Ray Button */}
           <SupportRayButton variant="welcome" />
@@ -125,8 +125,8 @@ const Welcome = () => {
             {isLogin ? 'Вход в аккаунт' : 'Создать аккаунт'}
           </h2>
           <p className="text-sm text-white/40 mb-6">
-            {isLogin 
-              ? 'Введите данные для входа' 
+            {isLogin
+              ? 'Введите данные для входа'
               : 'Начните путь к дисциплине'}
           </p>
 
@@ -136,22 +136,20 @@ const Welcome = () => {
               <button
                 type="button"
                 onClick={() => { setLoginMethod('nickname'); setError(''); }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                  loginMethod === 'nickname'
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${loginMethod === 'nickname'
                     ? 'bg-white/10 text-white border border-white/20'
                     : 'text-white/40 hover:text-white/60'
-                }`}
+                  }`}
               >
                 По нику
               </button>
               <button
                 type="button"
                 onClick={() => { setLoginMethod('email'); setError(''); }}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                  loginMethod === 'email'
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${loginMethod === 'email'
                     ? 'bg-white/10 text-white border border-white/20'
                     : 'text-white/40 hover:text-white/60'
-                }`}
+                  }`}
               >
                 По email
               </button>
@@ -196,41 +194,41 @@ const Welcome = () => {
               </div>
             )}
 
-              <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Пароль"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError('');
-                  }}
-                  className="h-14 text-base pl-12 pr-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors focus:outline-none"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
+            <div className="relative group">
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 group-focus-within:text-white/60 transition-colors" />
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Пароль"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError('');
+                }}
+                className="h-14 text-base pl-12 pr-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl focus:border-white/30 focus:ring-0 focus:bg-white/[0.07] transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors focus:outline-none"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
 
             {error && (
               <p className="text-red-400 text-sm bg-red-500/10 p-4 rounded-xl border border-red-500/20">{error}</p>
             )}
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full h-14 text-base font-semibold gap-2 bg-white text-black hover:bg-white/90 rounded-xl mt-6 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
               disabled={
-                isSubmitting || 
-                !password || 
+                isSubmitting ||
+                !password ||
                 (isLogin && loginMethod === 'nickname' && !nickname.trim()) ||
                 (isLogin && loginMethod === 'email' && !email) ||
                 (!isLogin && (!nickname.trim() || !email))
@@ -273,7 +271,7 @@ const Welcome = () => {
             className="inline-flex items-center gap-2 text-white/60 hover:text-white text-sm transition-colors"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+              <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
             </svg>
             Написать в Telegram
           </a>

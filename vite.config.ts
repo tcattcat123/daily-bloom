@@ -18,6 +18,7 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'robots.txt', 'favicon.png'],
       manifest: {
         name: 'Daily Bloom',

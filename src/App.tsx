@@ -10,6 +10,7 @@ import Welcome from "./pages/Welcome";
 import Teams from "./pages/Teams";
 import NotFound from "./pages/NotFound";
 import SupportRayNotifications from "@/components/SupportRayNotifications";
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <PWAInstallBanner />
         <BrowserRouter>
           <Routes>
             <Route path="/welcome" element={
