@@ -73,7 +73,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
 
     setTimeout(() => {
       toast.success(`Луч отправлен ${receiverNickname}! ✨`, {
-        description: 'Пользователь получил ваше тепло — это значит в вас верят!'
+        description: 'Пользователь получил ваш луч поддержки.'
       });
       setIsSending(false);
       setSparkles([]);
@@ -93,7 +93,7 @@ const SupportRayButton = ({ variant = 'default' }: SupportRayButtonProps) => {
 
     setTimeout(() => {
       toast.success('Луч поддержки отправлен! ✨', {
-        description: 'Случайный пользователь получит ваше тепло',
+        description: 'Случайный пользователь получил ваш луч поддержки.',
       });
       setIsSending(false);
       setSparkles([]);
