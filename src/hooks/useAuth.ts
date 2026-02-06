@@ -28,17 +28,52 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let mounted = true;
 
-        // Defer profile fetch with setTimeout to avoid deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
+    // Aggressive safety timeout for mobile
+    const timeoutId = setTimeout(() => {
+      if (mounted) {
+        setIsLoading(prev => {
+          if (prev) {
+            console.log('Mobile bypass: forcing auth load');
+            return false;
+          }
+          return prev;
+        });
+      }
+    }, 2000);
+
+    const initAuth = async () => {
+      try {
+        // 1. Get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+
+        if (mounted) {
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          if (initialSession?.user) {
+            fetchProfile(initialSession.user.id);
+          }
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Auth init error:', err);
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    initAuth();
+
+    // 2. Set up listener for future changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        if (!mounted) return;
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          fetchProfile(currentSession.user.id);
         } else {
           setProfile(null);
         }
@@ -47,31 +82,10 @@ export function useAuth() {
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-
-      setIsLoading(false);
-    }).catch(() => {
-      setIsLoading(false);
-    });
-
-    // SAFETY TIMEOUT: Ensure loading screen disappears even if auth hangs
-    const safetyTimeout = setTimeout(() => {
-      setIsLoading(prev => {
-        if (prev) console.warn('Auth loading timed out, proceeding anyway');
-        return false;
-      });
-    }, 5000);
-
     return () => {
+      mounted = false;
       subscription.unsubscribe();
-      clearTimeout(safetyTimeout);
+      clearTimeout(timeoutId);
     };
   }, [fetchProfile]);
 
