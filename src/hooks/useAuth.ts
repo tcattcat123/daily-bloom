@@ -57,9 +57,22 @@ export function useAuth() {
       }
 
       setIsLoading(false);
+    }).catch(() => {
+      setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    // SAFETY TIMEOUT: Ensure loading screen disappears even if auth hangs
+    const safetyTimeout = setTimeout(() => {
+      setIsLoading(prev => {
+        if (prev) console.warn('Auth loading timed out, proceeding anyway');
+        return false;
+      });
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
+    };
   }, [fetchProfile]);
 
   const register = useCallback(async (email: string, password: string, nickname: string) => {
