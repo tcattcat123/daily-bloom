@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Settings, Check, Play } from "lucide-react";
 import confetti from "canvas-confetti";
+import type { SunDayRecord } from "@/hooks/useUserData";
 
 import RitualCard from "@/components/RitualCard";
 import CircularProgress from "@/components/CircularProgress";
@@ -55,15 +56,144 @@ const Index = () => {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const prevRitualCompleteRef = useRef(false);
 
-  const allRitualsDone = rituals.every((r) => r.done);
+  // === DEMO MODE ===
+  const [demoActive, setDemoActive] = useState(false);
+  const [demoRituals, setDemoRituals] = useState<{text: string; done: boolean}[]>([]);
+  const [demoWeekData, setDemoWeekData] = useState<typeof weekData>([]);
+  const [demoPersonalWeekData, setDemoPersonalWeekData] = useState<typeof personalWeekData>([]);
+  const [demoSunHistory, setDemoSunHistory] = useState<SunDayRecord[]>([]);
+  const demoTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Fake data (commented out — using real user data instead)
+  // const DEMO_RITUALS = ["Медитация 10 мин", "Холодный душ", "Зарядка", "Чтение 15 мин", "Планирование дня", "Стакан воды", "Дневник благодарности"];
+  // const DEMO_HABITS = ["Обучение маркетинг", "Чтение", "Английский", "Спорт", "Медитация", "Нетворкинг", "Проект"];
+
+  const clearDemoTimeouts = useCallback(() => {
+    demoTimeouts.current.forEach(t => clearTimeout(t));
+    demoTimeouts.current = [];
+  }, []);
+
+  const startDemo = useCallback(() => {
+    if (demoActive) return;
+    clearDemoTimeouts();
+    setDemoActive(true);
+
+    // Use real user data, just reset completion state
+    const initRituals = rituals.map(r => ({ ...r, done: false }));
+    setDemoRituals(initRituals);
+    setDemoSunHistory([]);
+
+    // Reset weekData — keep structure, clear completions
+    const initWeek = weekData.map(day => ({
+      ...day,
+      completedIndices: [] as number[],
+    }));
+    setDemoWeekData(initWeek);
+
+    // Reset personalWeekData — keep structure, clear completions
+    const initPersonalWeek = personalWeekData.map(day => ({
+      ...day,
+      completedIndices: [] as number[],
+    }));
+    setDemoPersonalWeekData(initPersonalWeek);
+
+    const SPEED = 150; // ms between each action (2x speed)
+    let step = 0;
+
+    // Phase 1: Check off rituals one by one
+    const ritualCount = rituals.length;
+    for (let r = 0; r < ritualCount; r++) {
+      const t = setTimeout(() => {
+        setDemoRituals(prev => prev.map((rit, i) => i === r ? { ...rit, done: true } : rit));
+        if (r === ritualCount - 1) {
+          confetti({ particleCount: 100, spread: 80, origin: { x: 0.2, y: 0.3 }, colors: ["#ffffff", "#FFD60A", "#34C759"] });
+        }
+      }, SPEED * step);
+      demoTimeouts.current.push(t);
+      step++;
+    }
+
+    // Phase 2: Fill work habits day by day (using real enabled habits)
+    step += 3;
+    for (let d = 0; d < 7; d++) {
+      const dayEnabled = weekData[d]?.enabledHabits ?? habits.map((_, i) => i);
+      for (let ei = 0; ei < dayEnabled.length; ei++) {
+        const hIdx = dayEnabled[ei];
+        const t = setTimeout(() => {
+          setDemoWeekData(prev => prev.map((day, di) =>
+            di === d ? { ...day, completedIndices: [...day.completedIndices, hIdx] } : day
+          ));
+          if (ei === dayEnabled.length - 1) {
+            confetti({ particleCount: 40, spread: 50, origin: { x: 0.5, y: 0.5 }, colors: ["#34C759"] });
+          }
+        }, SPEED * step);
+        demoTimeouts.current.push(t);
+        step++;
+      }
+    }
+
+    // Phase 3: Fill personal habits day by day
+    step += 2;
+    for (let d = 0; d < 7; d++) {
+      for (let h = 0; h < personalHabits.length; h++) {
+        const t = setTimeout(() => {
+          setDemoPersonalWeekData(prev => prev.map((day, di) =>
+            di === d ? { ...day, completedIndices: [...day.completedIndices, h] } : day
+          ));
+          if (h === personalHabits.length - 1) {
+            confetti({ particleCount: 30, spread: 40, origin: { x: 0.8, y: 0.3 }, colors: ["#34C759", "#FFD60A"] });
+          }
+        }, SPEED * step);
+        demoTimeouts.current.push(t);
+        step++;
+      }
+    }
+
+    // Phase 4: Fill sun history one by one
+    step += 2;
+    const sunStatuses: ('burning' | 'warm' | 'gray')[] = ['burning', 'burning', 'warm', 'burning', 'burning', 'burning', 'burning'];
+    for (let s = 0; s < 7; s++) {
+      const t = setTimeout(() => {
+        setDemoSunHistory(prev => [...prev, { date: `2026-02-${3 + s}`, status: sunStatuses[s] }]);
+      }, SPEED * step);
+      demoTimeouts.current.push(t);
+      step++;
+    }
+
+    // Phase 5: Finale
+    const endT = setTimeout(() => {
+      confetti({ particleCount: 200, spread: 120, origin: { x: 0.5, y: 0.4 }, colors: ["#FFD60A", "#34C759", "#ffffff", "#FF6B35"] });
+    }, SPEED * step);
+    demoTimeouts.current.push(endT);
+
+    // Auto-stop demo after 4 more seconds
+    const stopT = setTimeout(() => {
+      setDemoActive(false);
+      clearDemoTimeouts();
+    }, SPEED * step + 4000);
+    demoTimeouts.current.push(stopT);
+  }, [demoActive, clearDemoTimeouts, rituals, weekData, personalWeekData, habits, personalHabits]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => clearDemoTimeouts();
+  }, [clearDemoTimeouts]);
+
+  // Effective data: demo overrides real data
+  const effRituals = demoActive ? demoRituals : rituals;
+  const effWeekData = demoActive ? demoWeekData : weekData;
+  const effPersonalWeekData = demoActive ? demoPersonalWeekData : personalWeekData;
+  const effSunHistory = demoActive ? demoSunHistory : sunHistory;
+
+  const allRitualsDone = effRituals.every((r) => r.done);
   const todayIndex = (new Date().getDay() + 6) % 7;
 
   // Stats calculations - count only enabled habits per day
-  const totalPossible = weekData.reduce((sum, day) => {
+  const totalPossible = effWeekData.reduce((sum, day) => {
     const enabled = day.enabledHabits ?? habits.map((_, i) => i);
     return sum + enabled.length;
   }, 0);
-  const totalDone = weekData.reduce((sum, day) => {
+  const totalDone = effWeekData.reduce((sum, day) => {
     const enabled = day.enabledHabits ?? habits.map((_, i) => i);
     return sum + day.completedIndices.filter(i => enabled.includes(i)).length;
   }, 0);
@@ -140,8 +270,8 @@ const Index = () => {
           </div>
           <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 sm:w-4 sm:h-4 w-3 h-3 bg-foreground rounded" />
-            <h1 className="text-[10px] sm:text-lg font-bold text-foreground">HumanOS</h1>
+            <div className="w-4 h-4 sm:w-4 sm:h-4 w-3 h-3 bg-foreground rounded cursor-pointer" onClick={startDemo} />
+            <h1 className="text-[10px] sm:text-lg font-bold text-foreground cursor-pointer" onClick={startDemo}>HumanOS</h1>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
             {/* Mobile Team Button */}
             <TeamButton mobile />
@@ -201,23 +331,24 @@ const Index = () => {
       < div className={`grid grid-cols-2 gap-2 mb-5 ${pillsEnabled ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
         {/* Ritual Card */}
         < RitualCard
-          rituals={rituals}
-          onToggle={toggleRitual}
+          rituals={effRituals}
+          onToggle={demoActive ? () => {} : toggleRitual}
           isComplete={allRitualsDone}
           dailyPlanPercent={planPercent}
-          streak={statistics.currentStreak}
-          sunHistory={sunHistory}
+          streak={demoActive ? 7 : statistics.currentStreak}
+          sunHistory={effSunHistory}
         />
 
         {/* Weekly Plan Card with mini charts */}
         < WeeklyPlanCard
-          weekData={weekData}
+          weekData={effWeekData}
           habits={habits}
           totalDone={totalDone}
           totalPossible={totalPossible}
           planPercent={planPercent}
-          morningRitualsDone={rituals.filter(r => r.done).length}
-          morningRitualsTotal={rituals.length}
+          morningRitualsDone={effRituals.filter(r => r.done).length}
+          morningRitualsTotal={effRituals.length}
+          allRitualsDone={allRitualsDone}
         />
 
         {/* Pill Tracker Card - conditionally rendered */}
@@ -234,8 +365,8 @@ const Index = () => {
         {/* Personal Development Card with progress bars */}
         <PersonalStandardCard
           habits={personalHabits}
-          weekData={personalWeekData}
-          onToggle={togglePersonalHabit}
+          weekData={effPersonalWeekData}
+          onToggle={demoActive ? () => {} : togglePersonalHabit}
           onAddHabit={() => setSettingsOpen(true)}
           neuronHistory={neuronHistory}
         />
@@ -245,7 +376,7 @@ const Index = () => {
       {
         layout === "vertical" ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 overflow-x-auto pb-4">
-            {weekData.map((day, dayIdx) => {
+            {effWeekData.map((day, dayIdx) => {
               // Get enabled habits for this day (default to all if not set)
               const enabledHabits = day.enabledHabits ?? habits.map((_, i) => i);
               const enabledCount = enabledHabits.length;
@@ -295,19 +426,19 @@ const Index = () => {
                     return (
                       <button
                         key={hIdx}
-                        onClick={() => handleToggleHabit(dayIdx, hIdx)}
-                        className={`flex items-center gap-1.5 rounded-lg border transition-all ${isFocusMode ? 'px-3 py-2.5' : 'px-2 py-2'
+                        onClick={() => !demoActive && handleToggleHabit(dayIdx, hIdx)}
+                        className={`flex items-center gap-1.5 rounded-lg border transition-all overflow-hidden w-full ${isFocusMode ? 'px-3 py-2.5' : 'px-2 py-2'
                           } ${isDone
                             ? isFocusMode && isFull
-                              ? "bg-white text-habit-green border-white font-bold" // Done & All Done (Focus)
-                              : "bg-habit-green border-habit-green text-white"     // Done (Standard/Partial)
+                              ? "bg-white text-habit-green border-white font-bold"
+                              : "bg-habit-green border-habit-green text-white"
                             : isFocusMode && isFull
-                              ? "bg-white/20 border-white/20 text-white hover:bg-white/30" // Not Done & All Done (Impossible state usually, but for style consistency if partial)
-                              : "bg-card border-border hover:border-muted-foreground"      // Not Done (Standard)
+                              ? "bg-white/20 border-white/20 text-white hover:bg-white/30"
+                              : "bg-card border-border hover:border-muted-foreground"
                           }`}
                       >
                         <div
-                          className={`w-3.5 h-3.5 rounded flex items-center justify-center border ${isDone
+                          className={`w-3.5 h-3.5 rounded flex-shrink-0 flex items-center justify-center border ${isDone
                             ? "bg-white border-white"
                             : "border-muted-foreground"
                             }`}
@@ -315,7 +446,7 @@ const Index = () => {
                           {isDone && <Check className="w-2.5 h-2.5 text-habit-green" />}
                         </div>
                         <span
-                          className={`font-medium truncate ${isFocusMode ? 'text-xs' : 'text-[10px]'
+                          className={`font-medium truncate min-w-0 ${isFocusMode ? 'text-xs' : 'text-[10px]'
                             } ${isDone
                               ? isFocusMode && isFull ? "text-habit-green" : "text-white"
                               : isFocusMode && isFull ? "text-white" : "text-muted-foreground"
@@ -332,7 +463,7 @@ const Index = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {weekData.map((day, dayIdx) => {
+            {effWeekData.map((day, dayIdx) => {
               // Get enabled habits for this day
               const enabledHabits = day.enabledHabits ?? habits.map((_, i) => i);
               const enabledCount = enabledHabits.length;
@@ -366,7 +497,7 @@ const Index = () => {
                       return (
                         <button
                           key={hIdx}
-                          onClick={() => handleToggleHabit(dayIdx, hIdx)}
+                          onClick={() => !demoActive && handleToggleHabit(dayIdx, hIdx)}
                           className={`rounded-md font-medium transition-all ${isFocusMode
                             ? `px-4 py-2 text-xs ${isDone
                               ? "bg-white text-habit-green font-bold shadow-sm"

@@ -15,6 +15,7 @@ interface WeeklyPlanCardProps {
   planPercent: number;
   morningRitualsDone?: number;
   morningRitualsTotal?: number;
+  allRitualsDone?: boolean;
 }
 
 const WeeklyPlanCard = ({
@@ -24,7 +25,8 @@ const WeeklyPlanCard = ({
   totalPossible,
   planPercent,
   morningRitualsDone = 0,
-  morningRitualsTotal = 4
+  morningRitualsTotal = 4,
+  allRitualsDone = false
 }: WeeklyPlanCardProps) => {
   const todayIndex = (new Date().getDay() + 6) % 7;
 
@@ -145,10 +147,23 @@ const WeeklyPlanCard = ({
         </div>
       </div>
 
+      {/* Manifesto text */}
+      <div className={`py-2 transition-all duration-700 ${
+        allRitualsDone ? 'animate-in fade-in zoom-in-95 duration-700' : ''
+      }`}>
+        <p className={`font-black leading-tight transition-all duration-700 text-[13px] sm:text-[15px] ${
+          allRitualsDone
+            ? 'text-habit-green drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]'
+            : 'text-foreground/15'
+        }`}>
+          ТЫ МОЖЕШЬ ВСЁ
+        </p>
+      </div>
+
       <div className="mt-auto">
-        {/* Waveform-style bar chart - Centered and narrower */}
-        <div className="max-w-[140px] mx-auto mb-2">
-          <div className="flex items-end justify-center gap-[2px] h-6 px-1">
+        {/* Waveform-style bar chart */}
+        <div className="max-w-[140px] mb-2">
+          <div className="flex items-end gap-[2px] h-6">
             {waveformBars.slice(0, 21).map((bar, idx) => ( // Keep it compact
               <div
                 key={idx}
