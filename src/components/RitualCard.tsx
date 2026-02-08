@@ -64,31 +64,35 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5 relative z-10">
+      <div className="flex flex-col gap-1 relative z-10">
         {rituals.map((ritual, idx) => (
           <div
             key={idx}
             onClick={() => onToggle(idx)}
-            className={`flex items-center gap-2 cursor-pointer transition-all duration-300 ${ritual.done
-                ? isComplete ? 'text-white' : 'text-foreground'
-                : isComplete ? 'text-white/70' : 'text-muted-foreground'
-              } ${ritual.done ? 'transform scale-[1.02]' : ''}`}
+            className={`flex items-center gap-1.5 w-full px-1.5 py-1.5 rounded-md cursor-pointer transition-all duration-300 ${ritual.done
+                ? isComplete
+                  ? 'bg-white/20 text-white'
+                  : 'bg-habit-green/10 text-foreground'
+                : isComplete
+                  ? 'bg-white/10 text-white/80 hover:bg-white/15'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+              }`}
           >
             <button
-              className={`w-4 h-4 rounded flex items-center justify-center transition-all ${ritual.done
+              className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all duration-300 ${ritual.done
                   ? isComplete
-                    ? 'bg-white'
-                    : 'bg-habit-green'
+                    ? 'bg-white shadow-sm'
+                    : 'bg-habit-green shadow-sm'
                   : isComplete
-                    ? 'bg-white/20'
-                    : 'border border-muted-foreground/30 hover:border-muted-foreground'
+                    ? 'border-2 border-white/40 hover:border-white/60'
+                    : 'border-2 border-muted-foreground/30 hover:border-muted-foreground/50'
                 }`}
             >
               {ritual.done && (
-                <Check className={`w-2.5 h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'}`} />
+                <Check className={`w-2.5 h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'} stroke-[3]`} />
               )}
             </button>
-            <span className={`text-[11px] font-medium ${ritual.done ? 'line-through opacity-70' : ''}`}>
+            <span className={`text-[11px] font-medium flex-1 ${ritual.done ? 'line-through opacity-60' : ''}`}>
               {ritual.text}
             </span>
           </div>

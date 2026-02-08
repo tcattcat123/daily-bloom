@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-import { Sparkles, ArrowRight, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Sparkles, ArrowRight, Mail, Lock, User, Eye, EyeOff, Download, Smartphone } from 'lucide-react';
 import { z } from 'zod';
 import FloatingNicknames from '@/components/FloatingNicknames';
 import SupportRayButton from '@/components/SupportRayButton';
@@ -33,8 +33,28 @@ const Welcome = () => {
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const { register, login, loginWithNickname } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      setDeferredPrompt(null);
+    } else if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      alert('Нажмите "Поделиться" → "На экран Домой"');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,8 +279,26 @@ const Welcome = () => {
           </div>
         </div>
 
+        {/* Install App Button */}
+        <div className="mt-5 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+          <button
+            onClick={handleInstallApp}
+            className="w-full group relative flex items-center justify-center gap-3 px-6 py-3.5 rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-sm hover:bg-white/[0.08] hover:border-white/20 transition-all duration-300 overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-transparent to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center group-hover:bg-white/15 transition-colors relative z-10">
+              <Download className="w-4.5 h-4.5 text-white/70 group-hover:text-white transition-colors" />
+            </div>
+            <div className="flex flex-col items-start relative z-10">
+              <span className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">Установить приложение</span>
+              <span className="text-[11px] text-white/35 group-hover:text-white/50 transition-colors">Быстрый доступ с главного экрана</span>
+            </div>
+            <Smartphone className="w-4 h-4 text-white/20 ml-auto relative z-10" />
+          </button>
+        </div>
+
         {/* Telegram link */}
-        <div className="mt-6 text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
+        <div className="mt-4 text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
           <p className="text-white/40 text-xs mb-2">
             Вопросы и пожелания оставляйте в Telegram
           </p>
