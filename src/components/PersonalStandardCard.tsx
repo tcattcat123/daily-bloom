@@ -1,4 +1,7 @@
-import { Plus, Trophy, Check, Flame, Target, Zap, Mountain, Star } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trophy, Check, Flame, Target, Zap, Mountain, Star, Brain } from "lucide-react";
+import NeuronHistoryModal from "./NeuronHistoryModal";
+import type { NeuronWeekRecord } from "@/hooks/useUserData";
 
 // Motivational quotes for personal development
 const MOTIVATIONAL_QUOTES = [
@@ -23,6 +26,7 @@ interface PersonalStandardCardProps {
   weekData: { name: string; completedIndices: number[] }[];
   onToggle: (dayIdx: number, habitIdx: number) => void;
   onAddHabit: () => void;
+  neuronHistory?: NeuronWeekRecord[];
   compact?: boolean;
 }
 
@@ -34,9 +38,16 @@ const getDotStatus = (completedCount: number, totalHabits: number): 'full' | 'pa
   return 'empty';
 };
 
-const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: PersonalStandardCardProps) => {
+const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHistory = [] }: PersonalStandardCardProps) => {
+  const [historyOpen, setHistoryOpen] = useState(false);
   const dayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const todayIndex = (new Date().getDay() + 6) % 7;
+
+  // Calculate current week neurons
+  const currentNeurons = habits.reduce((count, _, habitIdx) => {
+    const completedDays = weekData.filter(day => day.completedIndices.includes(habitIdx)).length;
+    return count + (completedDays >= 4 ? 1 : 0);
+  }, 0);
 
   // Calculate total completed habits
   const totalCompleted = weekData.reduce((sum, day) => sum + day.completedIndices.length, 0);
@@ -182,16 +193,27 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit }: Person
               })}
             </div>
 
-            {/* Streak counter */}
-            <div className="flex items-center gap-1">
-              <Flame className="w-3 h-3 text-streak-orange" />
-              <span className="text-[10px] font-bold text-muted-foreground">
-                {weekData.filter(day => getDotStatus(day.completedIndices.length, habits.length) !== 'empty').length} дн.
+            {/* Neuron counter - clickable */}
+            <button
+              onClick={() => setHistoryOpen(true)}
+              className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+            >
+              <Brain className="w-3 h-3 text-habit-green" />
+              <span className="text-[10px] font-bold text-habit-green">
+                {currentNeurons}
               </span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
+
+      <NeuronHistoryModal
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        history={neuronHistory}
+        currentNeurons={currentNeurons}
+        currentTotalHabits={habits.length}
+      />
     </div>
   );
 };

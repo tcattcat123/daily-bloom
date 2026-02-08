@@ -410,10 +410,7 @@ const HabitSettingsModal = ({
 
     setLocalHabits(newHabitsList);
     setLocalWeekData(prev => prev.map((day, idx) => {
-      if (idx !== activeDayIdx) {
-        // Ensure enabledHabits array exists for other days too
-        return { ...day, enabledHabits: day.enabledHabits || [] };
-      }
+      if (idx !== activeDayIdx) return day;
       const currentEnabled = day.enabledHabits || [];
       const merged = [...currentEnabled];
       newIndices.forEach(i => {
@@ -556,16 +553,41 @@ const HabitSettingsModal = ({
               <Label className="text-xs text-muted-foreground">
                 План на {localWeekData[selectedDays[0]]?.name || dayShortNames[selectedDays[0]]}:
               </Label>
-              <button
-                type="button"
-                onClick={() => setShowBulkInput(!showBulkInput)}
-                className={`text-[11px] font-medium px-2.5 py-1 rounded-md transition-all ${showBulkInput
-                  ? 'bg-habit-green text-white'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {showBulkInput ? 'Отмена' : '+ Списком'}
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const dayIdx = selectedDays[0];
+                    setLocalWeekData(prev => prev.map((day, idx) =>
+                      idx === dayIdx ? { ...day, enabledHabits: [] } : day
+                    ));
+                  }}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+                >
+                  Очистить день
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Очистить задачи на все дни?')) {
+                      setLocalWeekData(prev => prev.map(day => ({ ...day, enabledHabits: [] })));
+                    }
+                  }}
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-muted text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all"
+                >
+                  Все дни
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBulkInput(!showBulkInput)}
+                  className={`text-[11px] font-medium px-2.5 py-1 rounded-md transition-all ${showBulkInput
+                    ? 'bg-habit-green text-white'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {showBulkInput ? 'Отмена' : '+ Списком'}
+                </button>
+              </div>
             </div>
 
             {/* Bulk input textarea */}

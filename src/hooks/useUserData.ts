@@ -36,6 +36,20 @@ interface Statistics {
   longestStreak: number;
 }
 
+export interface SunDayRecord {
+  date: string; // ISO date
+  status: 'burning' | 'warm' | 'gray';
+}
+
+export interface NeuronWeekRecord {
+  weekStart: string; // e.g. "3 февр."
+  weekEnd: string;
+  date: string; // ISO date for sorting/trimming
+  neurons: number; // how many habits counted as "built"
+  totalHabits: number;
+  habitResults: { name: string; completedDays: number; isNeuron: boolean }[];
+}
+
 export interface CalendarEvent {
   id: string;
   date: string;
@@ -58,6 +72,9 @@ interface UserDataState {
   theme: 'standard' | 'focus';
   lastRitualsResetDate: string;
   statistics: Statistics;
+  neuronHistory: NeuronWeekRecord[];
+  sunHistory: SunDayRecord[];
+  ritualCompletedAt?: string; // ISO timestamp when all rituals were completed
 }
 
 const generateWeek = (): DayData[] => {
@@ -96,6 +113,25 @@ const getDefaultStatistics = (): Statistics => ({
   longestStreak: 0,
 });
 
+// Calculate neuron record from a completed week of personal habits
+const calculateNeurons = (
+  personalHabits: string[],
+  personalWeekData: DayData[]
+): { neurons: number; habitResults: { name: string; completedDays: number; isNeuron: boolean }[] } => {
+  const habitResults = personalHabits.map((name, habitIdx) => {
+    const completedDays = personalWeekData.filter(day =>
+      day.completedIndices.includes(habitIdx)
+    ).length;
+    // Neuron is "built" if ≤3 missed days (i.e. ≥4 completed days out of 7)
+    const isNeuron = completedDays >= 4;
+    return { name, completedDays, isNeuron };
+  });
+  const neurons = habitResults.filter(r => r.isNeuron).length;
+  return { neurons, habitResults };
+};
+
+const MAX_NEURON_HISTORY = 52; // ~1 year of weeks
+
 const getDefaultState = (): UserDataState => ({
   rituals: DEFAULT_RITUALS.map((text) => ({ text, done: false })),
   habits: [...DEFAULT_WORK_HABITS],
@@ -110,6 +146,9 @@ const getDefaultState = (): UserDataState => ({
   theme: 'standard',
   lastRitualsResetDate: getTodayDateStr(),
   statistics: getDefaultStatistics(),
+  neuronHistory: [],
+  sunHistory: [],
+  ritualCompletedAt: undefined,
 });
 
 // Process state for daily/weekly resets
@@ -127,19 +166,56 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
     calendarEvents: safeCalendarEvents,
   };
 
+  // Normalize weekData: ensure every day has explicit enabledHabits
+  const habitsCount = (parsed.habits || []).length;
+  if (newState.weekData) {
+    newState.weekData = newState.weekData.map(day => ({
+      ...day,
+      enabledHabits: day.enabledHabits ?? Array.from({ length: habitsCount }, (_, i) => i),
+    }));
+  }
+
   // Daily reset for morning rituals and pills only
   if (parsed.lastRitualsResetDate !== todayStr) {
     const completedRituals = parsed.rituals?.filter((r: Ritual) => r.done).length || 0;
     const completedPills = parsed.pills?.filter((p: Pill) => p.done).length || 0;
+    const totalRituals = parsed.rituals?.length || 0;
+    const missedRituals = totalRituals - completedRituals;
 
     const prevStats = parsed.statistics || getDefaultStatistics();
-    const allRitualsDone = parsed.rituals?.length > 0 && completedRituals === parsed.rituals.length;
+    const allRitualsDone = totalRituals > 0 && completedRituals === totalRituals;
+
+    // Calculate sun status for yesterday
+    let sunStatus: 'burning' | 'warm' | 'gray' = 'gray';
+    if (allRitualsDone) {
+      // Check if completed between 6:00-10:00
+      const completedAt = parsed.ritualCompletedAt;
+      if (completedAt) {
+        const hour = new Date(completedAt).getHours();
+        sunStatus = (hour >= 6 && hour < 10) ? 'burning' : 'warm';
+      } else {
+        sunStatus = 'warm';
+      }
+    } else if (missedRituals <= 2 && completedRituals > 0) {
+      sunStatus = 'warm';
+    }
+
+    // Save sun record for yesterday
+    const prevSunHistory: SunDayRecord[] = Array.isArray(newState.sunHistory) ? newState.sunHistory : [];
+    const sunRecord: SunDayRecord = {
+      date: parsed.lastRitualsResetDate || todayStr,
+      status: sunStatus,
+    };
+    // Keep last 30 days
+    const updatedSunHistory = [...prevSunHistory, sunRecord].slice(-30);
 
     newState = {
       ...newState,
       rituals: (parsed.rituals || []).map((r: Ritual) => ({ ...r, done: false })),
       pills: (parsed.pills || []).map((p: Pill) => ({ ...p, done: false })),
       lastRitualsResetDate: todayStr,
+      ritualCompletedAt: undefined,
+      sunHistory: updatedSunHistory,
       statistics: {
         ...prevStats,
         totalRitualsDone: prevStats.totalRitualsDone + completedRituals,
@@ -160,10 +236,31 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
 
     const prevStats = newState.statistics || getDefaultStatistics();
 
+    // Calculate neurons for the ending week
+    const prevHistory: NeuronWeekRecord[] = Array.isArray(newState.neuronHistory) ? newState.neuronHistory : [];
+    const { neurons, habitResults } = calculateNeurons(
+      parsed.personalHabits || [],
+      parsed.personalWeekData || []
+    );
+    const weekStart = parsed.personalWeekData?.[0]?.dateStr || storedWeekStart || '';
+    const weekEnd = parsed.personalWeekData?.[6]?.dateStr || '';
+
+    const newRecord: NeuronWeekRecord = {
+      weekStart,
+      weekEnd,
+      date: getTodayDateStr(),
+      neurons,
+      totalHabits: (parsed.personalHabits || []).length,
+      habitResults,
+    };
+
+    const updatedHistory = [...prevHistory, newRecord].slice(-MAX_NEURON_HISTORY);
+
     newState = {
       ...newState,
       weekData: currentWeek,
       personalWeekData: currentWeek,
+      neuronHistory: updatedHistory,
       statistics: {
         ...prevStats,
         totalWorkHabitsDone: prevStats.totalWorkHabitsDone + totalWorkDone,
@@ -321,12 +418,22 @@ export function useUserData() {
   }, []);
 
   const toggleRitual = useCallback((index: number) => {
-    setState((prev) => ({
-      ...prev,
-      rituals: prev.rituals.map((r, i) =>
+    setState((prev) => {
+      const newRituals = prev.rituals.map((r, i) =>
         i === index ? { ...r, done: !r.done } : r
-      ),
-    }));
+      );
+      const allDone = newRituals.length > 0 && newRituals.every(r => r.done);
+      return {
+        ...prev,
+        rituals: newRituals,
+        // Save timestamp when all rituals completed (for sun burning check 6-10am)
+        ritualCompletedAt: allDone && !prev.ritualCompletedAt
+          ? new Date().toISOString()
+          : allDone
+            ? prev.ritualCompletedAt
+            : undefined,
+      };
+    });
   }, []);
 
   // Habits
@@ -443,6 +550,22 @@ export function useUserData() {
   const resetWeek = useCallback(() => {
     setState((prev) => {
       const newWeek = generateWeek();
+
+      // Save neuron record for the ending week
+      const { neurons, habitResults } = calculateNeurons(prev.personalHabits, prev.personalWeekData);
+      const weekStart = prev.personalWeekData[0]?.dateStr || '';
+      const weekEnd = prev.personalWeekData[6]?.dateStr || '';
+      const newRecord: NeuronWeekRecord = {
+        weekStart,
+        weekEnd,
+        date: getTodayDateStr(),
+        neurons,
+        totalHabits: prev.personalHabits.length,
+        habitResults,
+      };
+      const prevHistory = Array.isArray(prev.neuronHistory) ? prev.neuronHistory : [];
+      const updatedHistory = [...prevHistory, newRecord].slice(-MAX_NEURON_HISTORY);
+
       return {
         ...prev,
         rituals: prev.rituals.map((r) => ({ ...r, done: false })),
@@ -452,27 +575,14 @@ export function useUserData() {
           enabledHabits: prev.weekData[idx]?.enabledHabits,
         })),
         personalWeekData: newWeek,
+        neuronHistory: updatedHistory,
       };
     });
   }, []);
 
   // Clear all data
   const clearAllData = useCallback(() => {
-    setState({
-      rituals: [],
-      habits: [],
-      personalHabits: [],
-      pills: [],
-      pillsEnabled: false,
-      calendarEnabled: true,
-      calendarEvents: [],
-      weekData: generateWeek(),
-      personalWeekData: generateWeek(),
-      layout: 'vertical',
-      theme: 'standard',
-      lastRitualsResetDate: getTodayDateStr(),
-      statistics: getDefaultStatistics(),
-    });
+    setState(getDefaultState());
   }, []);
 
   return {

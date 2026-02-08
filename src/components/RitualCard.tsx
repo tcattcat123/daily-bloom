@@ -1,4 +1,5 @@
 import { Sun, Check, Sparkles, Zap, Star, Heart, Trophy } from "lucide-react";
+import type { SunDayRecord } from "@/hooks/useUserData";
 
 interface Ritual {
   text: string;
@@ -10,6 +11,8 @@ interface RitualCardProps {
   onToggle: (index: number) => void;
   isComplete: boolean;
   dailyPlanPercent?: number;
+  streak?: number;
+  sunHistory?: SunDayRecord[];
 }
 
 // Motivational messages for each completed ritual
@@ -29,9 +32,18 @@ const MOTIVATIONAL_MESSAGES = [
   { text: "Последний рывок, ты справишься", icon: Heart },
 ];
 
-const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: RitualCardProps) => {
+const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0, streak = 0, sunHistory = [] }: RitualCardProps) => {
   const completedCount = rituals.filter(r => r.done).length;
+  const missedCount = rituals.length - completedCount;
   const progressPercent = rituals.length > 0 ? Math.round((completedCount / rituals.length) * 100) : 0;
+
+  // Sun status: 'burning' (all done), 'warm' (≤2 missed), 'gray' (>2 missed or nothing done)
+  const sunStatus: 'burning' | 'warm' | 'gray' =
+    completedCount === rituals.length && rituals.length > 0
+      ? 'burning'
+      : missedCount <= 2 && completedCount > 0
+        ? 'warm'
+        : 'gray';
 
   // Get current motivational message based on completed count
   const currentMotivation = completedCount > 0 && completedCount <= MOTIVATIONAL_MESSAGES.length
@@ -63,7 +75,7 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
         </div>
       )}
 
-      {/* Header with title only */}
+      {/* Header */}
       <div className="flex items-center justify-between mb-2 relative z-10">
         <div className={`text-[10px] font-bold uppercase tracking-wider ${isComplete ? 'text-white/80' : 'text-muted-foreground'
           }`}>
@@ -158,6 +170,49 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
           </div>
         </div>
       )}
+
+      {/* Weekly sun row - bottom */}
+      <div className={`mt-auto pt-2 relative z-10 ${!isComplete && !currentMotivation ? 'border-t border-border/30' : 'border-t border-white/10'}`}>
+        <div className="flex items-center justify-center gap-1 sm:gap-2">
+          {/* Past days (earned suns) */}
+          {sunHistory.slice(-6).map((record, idx) => (
+            <Sun
+              key={`past-${idx}`}
+              className={`w-3 h-3 sm:w-5 sm:h-5 transition-all ${
+                record.status === 'burning'
+                  ? 'text-ritual-gold drop-shadow-[0_0_2px_rgba(255,214,10,0.6)]'
+                  : record.status === 'warm'
+                    ? isComplete ? 'text-white/40' : 'text-ritual-gold/35'
+                    : isComplete ? 'text-white/15' : 'text-muted-foreground/15'
+              }`}
+              strokeWidth={2}
+            />
+          ))}
+          {/* Today's live sun */}
+          <div className={`relative flex items-center justify-center ${sunStatus === 'burning' ? 'animate-pulse' : ''}`}>
+            {sunStatus === 'burning' && (
+              <div className="absolute rounded-full bg-ritual-gold/30 blur-[3px] w-4 h-4 sm:w-6 sm:h-6" />
+            )}
+            <Sun className={`w-3 h-3 sm:w-5 sm:h-5 relative z-10 transition-all duration-500 ${
+              sunStatus === 'burning'
+                ? isComplete
+                  ? 'text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]'
+                  : 'text-ritual-gold drop-shadow-[0_0_4px_rgba(255,214,10,0.8)]'
+                : sunStatus === 'warm'
+                  ? isComplete ? 'text-white/50' : 'text-ritual-gold/50'
+                  : isComplete ? 'text-white/15' : 'text-muted-foreground/15'
+            }`} strokeWidth={2} />
+          </div>
+          {/* Future days (gray placeholders) */}
+          {Array.from({ length: Math.max(0, 6 - sunHistory.slice(-6).length) }, (_, i) => (
+            <Sun
+              key={`future-${i}`}
+              className={`w-3 h-3 sm:w-5 sm:h-5 ${isComplete ? 'text-white/15' : 'text-muted-foreground/15'}`}
+              strokeWidth={2}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

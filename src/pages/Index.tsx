@@ -48,6 +48,8 @@ const Index = () => {
     setWeekData,
     resetWeek,
     clearAllData,
+    neuronHistory,
+    sunHistory,
   } = useUserData();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -56,9 +58,15 @@ const Index = () => {
   const allRitualsDone = rituals.every((r) => r.done);
   const todayIndex = (new Date().getDay() + 6) % 7;
 
-  // Stats calculations
-  const totalPossible = weekData.length * habits.length;
-  const totalDone = weekData.reduce((sum, day) => sum + day.completedIndices.length, 0);
+  // Stats calculations - count only enabled habits per day
+  const totalPossible = weekData.reduce((sum, day) => {
+    const enabled = day.enabledHabits ?? habits.map((_, i) => i);
+    return sum + enabled.length;
+  }, 0);
+  const totalDone = weekData.reduce((sum, day) => {
+    const enabled = day.enabledHabits ?? habits.map((_, i) => i);
+    return sum + day.completedIndices.filter(i => enabled.includes(i)).length;
+  }, 0);
   const planPercent = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
 
   // Confetti on ritual completion
@@ -197,6 +205,8 @@ const Index = () => {
           onToggle={toggleRitual}
           isComplete={allRitualsDone}
           dailyPlanPercent={planPercent}
+          streak={statistics.currentStreak}
+          sunHistory={sunHistory}
         />
 
         {/* Weekly Plan Card with mini charts */}
@@ -227,6 +237,7 @@ const Index = () => {
           weekData={personalWeekData}
           onToggle={togglePersonalHabit}
           onAddHabit={() => setSettingsOpen(true)}
+          neuronHistory={neuronHistory}
         />
       </div >
 
