@@ -14,12 +14,19 @@ interface RitualCardProps {
 
 // Motivational messages for each completed ritual
 const MOTIVATIONAL_MESSAGES = [
-  { text: "Отличное начало! Ты молодец, продолжай! 🔥", icon: Zap },
-  { text: "Ты на волне! Так держать! ⚡", icon: Star },
-  { text: "Сила в тебе! Ещё чуть-чуть! 💪", icon: Heart },
-  { text: "Невероятно! Не останавливайся! ✨", icon: Sparkles },
-  { text: "Легенда! Ты почти у цели! 🏆", icon: Trophy },
-  { text: "Ты — машина! Финишируй! 🚀", icon: Zap },
+  { text: "Первый шаг сделан, не сбавляй", icon: Zap },
+  { text: "Ты на волне, так держать", icon: Star },
+  { text: "Разгоняешься, продолжай", icon: Heart },
+  { text: "Уже больше половины, сильно", icon: Sparkles },
+  { text: "Дисциплина крепнет с каждым днём", icon: Trophy },
+  { text: "Почти у цели, не останавливайся", icon: Zap },
+  { text: "Ещё немного и утро твоё", icon: Star },
+  { text: "Ты сильнее, чем вчера", icon: Heart },
+  { text: "Каждый ритуал — это победа", icon: Sparkles },
+  { text: "Железная воля, впечатляет", icon: Trophy },
+  { text: "Финишная прямая, дожимай", icon: Zap },
+  { text: "Рутина делает чемпионов", icon: Star },
+  { text: "Последний рывок, ты справишься", icon: Heart },
 ];
 
 const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: RitualCardProps) => {
@@ -64,12 +71,12 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
         </div>
       </div>
 
-      <div className="flex flex-col gap-1 relative z-10">
+      <div className="flex flex-col gap-0.5 sm:gap-1 relative z-10">
         {rituals.map((ritual, idx) => (
           <div
             key={idx}
             onClick={() => onToggle(idx)}
-            className={`flex items-center gap-1.5 w-full px-1.5 py-1.5 rounded-md cursor-pointer transition-all duration-300 ${ritual.done
+            className={`flex items-center gap-1.5 sm:gap-2 w-full px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-md cursor-pointer transition-all duration-300 ${ritual.done
                 ? isComplete
                   ? 'bg-white/20 text-white'
                   : 'bg-habit-green/10 text-foreground'
@@ -79,7 +86,7 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
               }`}
           >
             <button
-              className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 transition-all duration-300 ${ritual.done
+              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded flex items-center justify-center flex-shrink-0 transition-all duration-300 ${ritual.done
                   ? isComplete
                     ? 'bg-white shadow-sm'
                     : 'bg-habit-green shadow-sm'
@@ -89,10 +96,10 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
                 }`}
             >
               {ritual.done && (
-                <Check className={`w-2.5 h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'} stroke-[3]`} />
+                <Check className={`w-2 h-2 sm:w-2.5 sm:h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'} stroke-[3]`} />
               )}
             </button>
-            <span className={`text-[11px] font-medium flex-1 ${ritual.done ? 'line-through opacity-60' : ''}`}>
+            <span className={`text-[10px] sm:text-[12px] font-medium flex-1 ${ritual.done ? 'line-through opacity-60' : ''}`}>
               {ritual.text}
             </span>
           </div>
@@ -134,7 +141,7 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
             </div>
             <div className="flex items-center gap-1.5 flex-1">
               <currentMotivation.icon className="w-3.5 h-3.5 text-streak-orange flex-shrink-0" />
-              <span className="text-[11px] font-bold text-streak-orange">
+              <span className="text-[9px] font-bold text-streak-orange">
                 {currentMotivation.text}
               </span>
             </div>
@@ -147,7 +154,7 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0 }: Rit
         <div className="mt-auto pt-2 border-t border-white/20 relative z-10">
           <div className="flex items-center gap-1.5">
             <Trophy className="w-3 h-3 text-white" />
-            <span className="text-[10px] font-bold text-white">✨ Утро прошло идеально!</span>
+            <span className="text-[9px] font-bold text-white">Утро прошло идеально</span>
           </div>
         </div>
       )}

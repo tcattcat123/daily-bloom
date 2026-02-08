@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2, Check, Zap, Eye } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2, Check, Zap, Eye, GripVertical } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -205,6 +205,18 @@ const HabitSettingsModal = ({
   const [editingPersonalHabitIdx, setEditingPersonalHabitIdx] = useState<number | null>(null);
   const [editingPillIdx, setEditingPillIdx] = useState<number | null>(null);
 
+  // Bulk input state
+  const [showBulkInput, setShowBulkInput] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+
+  // Drag and drop state for work habits
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  // Drag and drop state for personal habits
+  const [personalDragIdx, setPersonalDragIdx] = useState<number | null>(null);
+  const [personalDragOverIdx, setPersonalDragOverIdx] = useState<number | null>(null);
+
   const dayShortNames = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
   useEffect(() => {
@@ -236,14 +248,17 @@ const HabitSettingsModal = ({
     });
   };
 
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
   const handleAddHabit = () => {
     if (newHabit.trim()) {
-      const newHabitsList = [...localHabits, newHabit.trim()];
+      const newHabitsList = [...localHabits, capitalize(newHabit.trim())];
       setLocalHabits(newHabitsList);
-      // Add new habit ONLY to selected days
+      // Add new habit only to the currently selected day
+      const activeDayIdx = selectedDays[0];
       setLocalWeekData(prev => prev.map((day, idx) => ({
         ...day,
-        enabledHabits: selectedDays.includes(idx)
+        enabledHabits: idx === activeDayIdx
           ? [...(day.enabledHabits || []), newHabitsList.length - 1]
           : (day.enabledHabits || [])
       })));
@@ -253,14 +268,14 @@ const HabitSettingsModal = ({
 
   const handleAddPersonalHabit = () => {
     if (newPersonalHabit.trim()) {
-      setLocalPersonalHabits([...localPersonalHabits, newPersonalHabit.trim()]);
+      setLocalPersonalHabits([...localPersonalHabits, capitalize(newPersonalHabit.trim())]);
       setNewPersonalHabit("");
     }
   };
 
   const handleAddRitual = () => {
     if (newRitual.trim()) {
-      setLocalRituals([...localRituals, { text: newRitual.trim(), done: false }]);
+      setLocalRituals([...localRituals, { text: capitalize(newRitual.trim()), done: false }]);
       setNewRitual("");
     }
   };
@@ -320,6 +335,105 @@ const HabitSettingsModal = ({
 
       return newWeekData;
     });
+  };
+
+  const toggleHabitForDay = (habitIdx: number, dayIdx: number) => {
+    setLocalWeekData(prev => {
+      const newWeekData = [...prev];
+      const day = { ...newWeekData[dayIdx] };
+      const enabled = day.enabledHabits ? [...day.enabledHabits] : localHabits.map((_, i) => i);
+
+      if (enabled.includes(habitIdx)) {
+        day.enabledHabits = enabled.filter(i => i !== habitIdx);
+      } else {
+        day.enabledHabits = [...enabled, habitIdx].sort((a, b) => a - b);
+      }
+
+      newWeekData[dayIdx] = day;
+      return newWeekData;
+    });
+  };
+
+  const handleDragEnd = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+
+    const newHabits = [...localHabits];
+    const [moved] = newHabits.splice(fromIdx, 1);
+    newHabits.splice(toIdx, 0, moved);
+    setLocalHabits(newHabits);
+
+    // Reindex enabledHabits and completedIndices in weekData
+    setLocalWeekData(prev => prev.map(day => {
+      const reindex = (indices: number[]) => {
+        return indices.map(i => {
+          if (i === fromIdx) return toIdx;
+          if (fromIdx < toIdx) {
+            return (i > fromIdx && i <= toIdx) ? i - 1 : i;
+          } else {
+            return (i >= toIdx && i < fromIdx) ? i + 1 : i;
+          }
+        }).sort((a, b) => a - b);
+      };
+      return {
+        ...day,
+        enabledHabits: day.enabledHabits ? reindex(day.enabledHabits) : undefined,
+        completedIndices: reindex(day.completedIndices),
+      };
+    }));
+
+    setDragIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const handleBulkAdd = () => {
+    const items = bulkText
+      .split(/[\n,]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .map(s => capitalize(s));
+
+    if (items.length === 0) return;
+
+    const activeDayIdx = selectedDays[0];
+    let newHabitsList = [...localHabits];
+    const newIndices: number[] = [];
+
+    items.forEach(item => {
+      // Check if habit already exists
+      let existingIdx = newHabitsList.findIndex(h => h.toLowerCase() === item.toLowerCase());
+      if (existingIdx === -1) {
+        newHabitsList.push(item);
+        existingIdx = newHabitsList.length - 1;
+      }
+      newIndices.push(existingIdx);
+    });
+
+    setLocalHabits(newHabitsList);
+    setLocalWeekData(prev => prev.map((day, idx) => {
+      if (idx !== activeDayIdx) {
+        // Ensure enabledHabits array exists for other days too
+        return { ...day, enabledHabits: day.enabledHabits || [] };
+      }
+      const currentEnabled = day.enabledHabits || [];
+      const merged = [...currentEnabled];
+      newIndices.forEach(i => {
+        if (!merged.includes(i)) merged.push(i);
+      });
+      return { ...day, enabledHabits: merged };
+    }));
+
+    setBulkText("");
+    setShowBulkInput(false);
+  };
+
+  const handlePersonalDragEnd = (fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+    const newHabits = [...localPersonalHabits];
+    const [moved] = newHabits.splice(fromIdx, 1);
+    newHabits.splice(toIdx, 0, moved);
+    setLocalPersonalHabits(newHabits);
+    setPersonalDragIdx(null);
+    setPersonalDragOverIdx(null);
   };
 
   const handleSave = () => {
@@ -418,17 +532,17 @@ const HabitSettingsModal = ({
           {/* Work Habits Tab */}
           <TabsContent value="work" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
-              Выберите дни тапом, затем настройте привычки для них
+              Выберите день, затем настройте задачи для него
             </p>
 
-            {/* Multi-day selector */}
+            {/* Single day selector */}
             <div className="flex gap-1 mb-4">
               {dayShortNames.map((day, idx) => (
                 <button
                   key={idx}
-                  onClick={() => toggleDaySelection(idx)}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${selectedDays.includes(idx)
-                      ? 'bg-habit-green text-white'
+                  onClick={() => setSelectedDays([idx])}
+                  className={`flex-1 py-1.5 text-xs font-medium rounded-full transition-all ${selectedDays[0] === idx
+                      ? 'bg-habit-green text-white shadow-sm'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                 >
@@ -437,84 +551,125 @@ const HabitSettingsModal = ({
               ))}
             </div>
 
-            {/* Habits list with checkboxes for selected days */}
-            <div className="flex flex-col gap-2 mb-4">
+            {/* Tasks for selected day */}
+            <div className="flex items-center justify-between mb-2">
               <Label className="text-xs text-muted-foreground">
-                {selectedDays.length === 1
-                  ? `Задачи на ${localWeekData[selectedDays[0]]?.name || dayShortNames[selectedDays[0]]}:`
-                  : `Задачи на выбранные дни (${selectedDays.map(d => dayShortNames[d]).join(', ')}):`
-                }
+                План на {localWeekData[selectedDays[0]]?.name || dayShortNames[selectedDays[0]]}:
               </Label>
-              {localHabits.length === 0 ? (
-                <p className="text-xs text-muted-foreground/60 italic py-2">
-                  Добавьте привычки ниже
-                </p>
-              ) : (
-                localHabits.map((habit, idx) => {
-                  // Check if habit is enabled in ALL selected days
-                  const enabledInAll = selectedDays.every(dayIdx => {
-                    const dayEnabled = localWeekData[dayIdx]?.enabledHabits;
-                    return dayEnabled !== undefined ? dayEnabled.includes(idx) : true;
-                  });
-                  // Check if habit is enabled in SOME selected days (for partial state)
-                  const enabledInSome = selectedDays.some(dayIdx => {
-                    const dayEnabled = localWeekData[dayIdx]?.enabledHabits;
-                    return dayEnabled !== undefined ? dayEnabled.includes(idx) : true;
-                  });
+              <button
+                type="button"
+                onClick={() => setShowBulkInput(!showBulkInput)}
+                className={`text-[11px] font-medium px-2.5 py-1 rounded-md transition-all ${showBulkInput
+                  ? 'bg-habit-green text-white'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                {showBulkInput ? 'Отмена' : '+ Списком'}
+              </button>
+            </div>
 
+            {/* Bulk input textarea */}
+            {showBulkInput && (
+              <div className="mb-3 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <textarea
+                  autoFocus
+                  value={bulkText}
+                  onChange={(e) => setBulkText(e.target.value)}
+                  placeholder={"Введите задачи через Enter или запятую:\nПрезентация\nПоиск блогеров\nДоработка сайта"}
+                  className="w-full h-28 px-3 py-2 text-sm border border-border/50 rounded-xl bg-card resize-none focus:outline-none focus:border-habit-green/50 placeholder:text-muted-foreground/40"
+                />
+                <Button
+                  onClick={handleBulkAdd}
+                  disabled={!bulkText.trim()}
+                  className="w-full gap-2 bg-habit-green hover:bg-habit-green/90 text-white"
+                  size="sm"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Добавить задачи
+                </Button>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-1.5 mb-4">
+              {(() => {
+                const dayIdx = selectedDays[0];
+                const dayEnabled = localWeekData[dayIdx]?.enabledHabits;
+                const enabledIndices = dayEnabled !== undefined ? dayEnabled : localHabits.map((_, i) => i);
+                const visibleHabits = enabledIndices.filter(i => i < localHabits.length);
+
+                if (visibleHabits.length === 0) {
                   return (
-                    <div key={idx} className="flex items-center gap-2 group">
-                      <button
-                        type="button"
-                        onClick={() => toggleHabitForSelectedDays(idx)}
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${enabledInAll
-                            ? 'bg-habit-green border-habit-green'
-                            : enabledInSome
-                              ? 'bg-habit-green/50 border-habit-green'
-                              : 'border-muted-foreground/40 hover:border-muted-foreground'
-                          }`}
-                      >
-                        {enabledInAll && (
-                          <Check className="w-3 h-3 text-white" />
-                        )}
-                        {!enabledInAll && enabledInSome && (
-                          <div className="w-2 h-0.5 bg-white rounded" />
-                        )}
-                      </button>
-                      {editingHabitIdx === idx ? (
-                        <Input
-                          autoFocus
-                          value={habit}
-                          onChange={(e) => setLocalHabits(prev => prev.map((h, i) => i === idx ? e.target.value : h))}
-                          onBlur={() => setEditingHabitIdx(null)}
-                          onKeyDown={(e) => e.key === "Enter" && setEditingHabitIdx(null)}
-                          className="flex-1"
-                        />
-                      ) : (
-                        <div
-                          onClick={() => setEditingHabitIdx(idx)}
-                          className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${enabledInAll
-                              ? 'bg-muted hover:bg-muted/80'
-                              : enabledInSome
-                                ? 'bg-muted/60 hover:bg-muted/70'
-                                : 'bg-muted/30 text-muted-foreground/50 hover:bg-muted/50'
-                            }`}
-                        >
-                          {habit}
-                        </div>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-8 w-8"
-                        onClick={() => handleRemoveHabit(idx)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    <p className="text-xs text-muted-foreground/60 italic py-2">
+                      Нет задач на этот день. Добавьте ниже.
+                    </p>
                   );
-                })
-              )}
+                }
+
+                return visibleHabits.map((habitIdx, orderIdx) => (
+                  <div
+                    key={habitIdx}
+                    draggable
+                    onDragStart={() => setDragIdx(orderIdx)}
+                    onDragOver={(e) => { e.preventDefault(); setDragOverIdx(orderIdx); }}
+                    onDragEnd={() => {
+                      if (dragIdx !== null && dragOverIdx !== null && dragIdx !== dragOverIdx) {
+                        // Reorder within the day's enabledHabits
+                        setLocalWeekData(prev => {
+                          const newWeekData = [...prev];
+                          const day = { ...newWeekData[dayIdx] };
+                          const enabled = [...(day.enabledHabits ?? localHabits.map((_, i) => i))].filter(i => i < localHabits.length);
+                          const [moved] = enabled.splice(dragIdx, 1);
+                          enabled.splice(dragOverIdx, 0, moved);
+                          day.enabledHabits = enabled;
+                          newWeekData[dayIdx] = day;
+                          return newWeekData;
+                        });
+                      }
+                      setDragIdx(null);
+                      setDragOverIdx(null);
+                    }}
+                    className={`flex items-center gap-2 group rounded-xl border px-3 py-2.5 transition-all ${
+                      dragOverIdx === orderIdx && dragIdx !== null && dragIdx !== orderIdx
+                        ? 'border-habit-green bg-habit-green/5'
+                        : 'border-border/40 bg-card hover:border-border'
+                    } ${dragIdx === orderIdx ? 'opacity-40' : ''}`}
+                  >
+                    {/* Drag handle */}
+                    <div className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground/60 touch-none flex-shrink-0">
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+
+                    {/* Task name - click to edit */}
+                    {editingHabitIdx === habitIdx ? (
+                      <Input
+                        autoFocus
+                        value={localHabits[habitIdx]}
+                        onChange={(e) => setLocalHabits(prev => prev.map((h, i) => i === habitIdx ? e.target.value : h))}
+                        onBlur={() => setEditingHabitIdx(null)}
+                        onKeyDown={(e) => e.key === "Enter" && setEditingHabitIdx(null)}
+                        className="flex-1 h-8 text-sm"
+                      />
+                    ) : (
+                      <div
+                        onClick={() => setEditingHabitIdx(habitIdx)}
+                        className="flex-1 text-sm font-medium cursor-pointer hover:text-habit-green transition-colors"
+                      >
+                        {localHabits[habitIdx]}
+                      </div>
+                    )}
+
+                    {/* Remove from this day */}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-7 w-7 flex-shrink-0"
+                      onClick={() => toggleHabitForDay(habitIdx, dayIdx)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ));
+              })()}
             </div>
 
             <Separator className="my-3" />
@@ -538,11 +693,31 @@ const HabitSettingsModal = ({
           {/* Personal Habits Tab */}
           <TabsContent value="personal" className="mt-4">
             <p className="text-xs text-muted-foreground mb-3">
-              Привычки для выработки дисциплины (верхний график)
+              Привычки для выработки дисциплины. Перетаскивайте ☰ для изменения приоритета.
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {localPersonalHabits.map((habit, idx) => (
-                <div key={idx} className="flex items-center gap-2 group">
+                <div
+                  key={idx}
+                  draggable
+                  onDragStart={() => setPersonalDragIdx(idx)}
+                  onDragOver={(e) => { e.preventDefault(); setPersonalDragOverIdx(idx); }}
+                  onDragEnd={() => {
+                    if (personalDragIdx !== null && personalDragOverIdx !== null) handlePersonalDragEnd(personalDragIdx, personalDragOverIdx);
+                    setPersonalDragIdx(null);
+                    setPersonalDragOverIdx(null);
+                  }}
+                  className={`flex items-center gap-2 group rounded-xl border px-3 py-2.5 transition-all ${
+                    personalDragOverIdx === idx && personalDragIdx !== null && personalDragIdx !== idx
+                      ? 'border-habit-green bg-habit-green/5'
+                      : 'border-border/40 bg-card hover:border-border'
+                  } ${personalDragIdx === idx ? 'opacity-40' : ''}`}
+                >
+                  {/* Drag handle */}
+                  <div className="cursor-grab active:cursor-grabbing text-muted-foreground/30 hover:text-muted-foreground/60 touch-none flex-shrink-0">
+                    <GripVertical className="w-4 h-4" />
+                  </div>
+
                   {editingPersonalHabitIdx === idx ? (
                     <Input
                       autoFocus
@@ -550,12 +725,12 @@ const HabitSettingsModal = ({
                       onChange={(e) => setLocalPersonalHabits(prev => prev.map((h, i) => i === idx ? e.target.value : h))}
                       onBlur={() => setEditingPersonalHabitIdx(null)}
                       onKeyDown={(e) => e.key === "Enter" && setEditingPersonalHabitIdx(null)}
-                      className="flex-1"
+                      className="flex-1 h-8 text-sm"
                     />
                   ) : (
                     <div
                       onClick={() => setEditingPersonalHabitIdx(idx)}
-                      className="flex-1 px-3 py-2 bg-muted rounded-lg text-sm cursor-pointer hover:bg-muted/80 transition-colors"
+                      className="flex-1 text-sm font-medium cursor-pointer hover:text-habit-green transition-colors"
                     >
                       {habit}
                     </div>
@@ -563,10 +738,10 @@ const HabitSettingsModal = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-8 w-8"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive h-7 w-7 flex-shrink-0"
                     onClick={() => setLocalPersonalHabits(localPersonalHabits.filter((_, i) => i !== idx))}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               ))}

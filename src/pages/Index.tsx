@@ -276,9 +276,9 @@ const Index = () => {
                       </div>
                     </div>
                   </div>
-                  {habits.map((habit, hIdx) => {
-                    // Only show habits enabled for this day
-                    if (!enabledHabits.includes(hIdx)) return null;
+                  {enabledHabits.map((hIdx) => {
+                    const habit = habits[hIdx];
+                    if (!habit) return null;
 
                     const isDone = day.completedIndices.includes(hIdx);
                     return (
@@ -347,9 +347,9 @@ const Index = () => {
                     <div className={`${isFocusMode ? 'text-xs' : 'text-[10px]'} ${isFull && isFocusMode ? 'text-white/80' : 'text-muted-foreground'}`}>{day.dateStr}</div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 flex-1">
-                    {habits.map((habit, hIdx) => {
-                      // Only show habits enabled for this day
-                      if (!enabledHabits.includes(hIdx)) return null;
+                    {enabledHabits.map((hIdx) => {
+                      const habit = habits[hIdx];
+                      if (!habit) return null;
 
                       const isDone = day.completedIndices.includes(hIdx);
                       return (
