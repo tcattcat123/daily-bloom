@@ -21,9 +21,9 @@ export default defineConfig(({ mode }) => ({
       injectRegister: 'inline',
       includeAssets: ['favicon.ico', 'robots.txt', 'favicon.png'],
       manifest: {
-        name: 'HumanOS',
-        short_name: 'HumanOS',
-        description: 'Ваш личный планировщик привычек и командной работы',
+        name: 'Focus',
+        short_name: 'Focus',
+        description: 'Система выработки дисциплины',
         theme_color: '#10b981',
         icons: [
           {
