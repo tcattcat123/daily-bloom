@@ -8,6 +8,8 @@ import { z } from 'zod';
 import FloatingNicknames from '@/components/FloatingNicknames';
 import SupportRayButton from '@/components/SupportRayButton';
 
+const APP_VERSION = '2.0.0';
+
 const registerSchema = z.object({
   email: z.string().email('Некорректный email'),
   password: z.string().min(6, 'Минимум 6 символов'),
@@ -131,9 +133,12 @@ const Welcome = () => {
               <Sparkles className="w-7 h-7 text-black" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">HumanOS</h1>
+          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">Focus</h1>
           <p className="text-white/50 text-sm font-medium tracking-wide uppercase mb-5">
             Система выработки железной дисциплины
+          </p>
+          <p className="text-white/30 text-xs font-mono mb-5">
+            v{APP_VERSION}
           </p>
           {/* Support Ray Button */}
           <SupportRayButton variant="welcome" />
@@ -245,7 +250,7 @@ const Welcome = () => {
 
             <Button
               type="submit"
-              className="w-full h-14 text-base font-semibold gap-2 bg-white text-black hover:bg-white/90 rounded-xl mt-6 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+              className="w-full h-14 text-base font-semibold gap-2 bg-habit-green text-white hover:bg-habit-green/90 rounded-xl mt-6 transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
               disabled={
                 isSubmitting ||
                 !password ||
@@ -291,7 +296,7 @@ const Welcome = () => {
             </div>
             <div className="flex flex-col items-start relative z-10">
               <span className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">Установить приложение</span>
-              <span className="text-[11px] text-white/35 group-hover:text-white/50 transition-colors">Быстрый доступ с главного экрана</span>
+              <span className="text-[11px] text-white/35 group-hover:text-white/50 transition-colors">v{APP_VERSION} • Быстрый доступ с главного экрана</span>
             </div>
             <Smartphone className="w-4 h-4 text-white/20 ml-auto relative z-10" />
           </button>
@@ -313,6 +318,9 @@ const Welcome = () => {
             </svg>
             Написать в Telegram
           </a>
+          <p className="text-white/25 text-[10px] mt-3 font-mono">
+            Focus v{APP_VERSION}
+          </p>
         </div>
       </div>
     </div>

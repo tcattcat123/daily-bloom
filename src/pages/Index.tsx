@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
 
+const APP_VERSION = '2.0.0';
+
 const Index = () => {
   const { user, logout, isLoading: authLoading } = useAuth();
   const {
@@ -296,6 +298,7 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 sm:w-4 sm:h-4 w-3 h-3 bg-foreground rounded cursor-pointer" onClick={startDemo} />
             <h1 className="text-[10px] sm:text-lg font-bold text-foreground cursor-pointer" onClick={startDemo}>Focus</h1>
+            <span className="text-[8px] sm:text-[10px] text-muted-foreground/60 font-mono">v{APP_VERSION}</span>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
             {/* Mobile Team Button */}
             <TeamButton mobile />
