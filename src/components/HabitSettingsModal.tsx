@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2, Check, Zap, Eye, GripVertical } from "lucide-react";
+import { Plus, Trash2, LogOut, RotateCcw, LayoutGrid, LayoutList, Sun, Moon, TrendingUp, Calendar, Flame, CheckCircle2, Check, Zap, Eye, GripVertical, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,8 @@ interface HabitSettingsModalProps {
   onSaveWeekData: (weekData: DayData[]) => void;
   onResetWeek: () => void;
   onLogout: () => void;
+  demoEndText?: string;
+  onSetDemoEndText?: (text: string) => void;
 }
 
 // Theme toggle component
@@ -181,7 +183,9 @@ const HabitSettingsModal = ({
   onSetTheme,
   onSaveWeekData,
   onResetWeek,
-  onLogout
+  onLogout,
+  demoEndText = '',
+  onSetDemoEndText
 }: HabitSettingsModalProps) => {
   const [localHabits, setLocalHabits] = useState<string[]>(habits);
   const [localPersonalHabits, setLocalPersonalHabits] = useState<string[]>(personalHabits);
@@ -191,6 +195,7 @@ const HabitSettingsModal = ({
   const [localCalendarEnabled, setLocalCalendarEnabled] = useState(calendarEnabled);
   const [localLayout, setLocalLayout] = useState(layout);
   const [localTheme, setLocalTheme] = useState(theme);
+  const [localDemoEndText, setLocalDemoEndText] = useState(demoEndText);
   const [localWeekData, setLocalWeekData] = useState<DayData[]>(weekData);
   const [newHabit, setNewHabit] = useState("");
   const [newPersonalHabit, setNewPersonalHabit] = useState("");
@@ -443,6 +448,7 @@ const HabitSettingsModal = ({
     onSetLayout(localLayout);
     onSetTheme(localTheme);
     onSaveWeekData(localWeekData);
+    if (onSetDemoEndText) onSetDemoEndText(localDemoEndText);
     onClose();
   };
 
@@ -943,6 +949,34 @@ const HabitSettingsModal = ({
                     Строки
                   </Button>
                 </div>
+              </div>
+
+              <Separator />
+
+              {/* Demo end text */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Текст в конце демо-анимации</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={localDemoEndText}
+                    onChange={(e) => setLocalDemoEndText(e.target.value)}
+                    placeholder="@Humanos_start"
+                    className="flex-1"
+                  />
+                  {localDemoEndText && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocalDemoEndText('')}
+                      className="text-destructive border-destructive/30 hover:bg-destructive/10 px-3"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Оставьте пустым чтобы убрать текст
+                </p>
               </div>
 
               <Separator />

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Settings, Check, Play } from "lucide-react";
+import { Settings, Check, Play, Brain } from "lucide-react";
 import confetti from "canvas-confetti";
 import type { SunDayRecord } from "@/hooks/useUserData";
 
@@ -51,6 +51,8 @@ const Index = () => {
     clearAllData,
     neuronHistory,
     sunHistory,
+    demoEndText,
+    setDemoEndText,
   } = useUserData();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -62,6 +64,8 @@ const Index = () => {
   const [demoWeekData, setDemoWeekData] = useState<typeof weekData>([]);
   const [demoPersonalWeekData, setDemoPersonalWeekData] = useState<typeof personalWeekData>([]);
   const [demoSunHistory, setDemoSunHistory] = useState<SunDayRecord[]>([]);
+  const [demoShowTg, setDemoShowTg] = useState(false);
+  const [demoBrainDay, setDemoBrainDay] = useState<number | null>(null);
   const demoTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   // Fake data (commented out — using real user data instead)
@@ -113,8 +117,12 @@ const Index = () => {
       step++;
     }
 
-    // Phase 2: Fill work habits day by day (using real enabled habits)
+    // Phase 2 + 3: Fill work habits AND personal habits in parallel
     step += 3;
+    const habitsStartStep = step;
+
+    // Work habits
+    let workStep = habitsStartStep;
     for (let d = 0; d < 7; d++) {
       const dayEnabled = weekData[d]?.enabledHabits ?? habits.map((_, i) => i);
       for (let ei = 0; ei < dayEnabled.length; ei++) {
@@ -125,15 +133,18 @@ const Index = () => {
           ));
           if (ei === dayEnabled.length - 1) {
             confetti({ particleCount: 40, spread: 50, origin: { x: 0.5, y: 0.5 }, colors: ["#34C759"] });
+            // Show brain icon for this day
+            setDemoBrainDay(d);
+            setTimeout(() => setDemoBrainDay(null), 600);
           }
-        }, SPEED * step);
+        }, SPEED * workStep);
         demoTimeouts.current.push(t);
-        step++;
+        workStep++;
       }
     }
 
-    // Phase 3: Fill personal habits day by day
-    step += 2;
+    // Personal habits (starts at same time as work habits)
+    let personalStep = habitsStartStep;
     for (let d = 0; d < 7; d++) {
       for (let h = 0; h < personalHabits.length; h++) {
         const t = setTimeout(() => {
@@ -143,36 +154,49 @@ const Index = () => {
           if (h === personalHabits.length - 1) {
             confetti({ particleCount: 30, spread: 40, origin: { x: 0.8, y: 0.3 }, colors: ["#34C759", "#FFD60A"] });
           }
-        }, SPEED * step);
+        }, SPEED * personalStep);
         demoTimeouts.current.push(t);
-        step++;
+        personalStep++;
       }
     }
+
+    // Continue from whichever finished last
+    step = Math.max(workStep, personalStep);
 
     // Phase 4: Fill sun history one by one
     step += 2;
     const sunStatuses: ('burning' | 'warm' | 'gray')[] = ['burning', 'burning', 'warm', 'burning', 'burning', 'burning', 'burning'];
+    const sunCompletedCounts = [7, 7, 5, 7, 7, 7, 7]; // Number of rituals completed each day
     for (let s = 0; s < 7; s++) {
       const t = setTimeout(() => {
-        setDemoSunHistory(prev => [...prev, { date: `2026-02-${3 + s}`, status: sunStatuses[s] }]);
+        const completedCount = sunCompletedCounts[s];
+        const completed = rituals.slice(0, completedCount).map(r => r.text);
+        setDemoSunHistory(prev => [...prev, {
+          date: `2026-02-${3 + s}`,
+          status: sunStatuses[s],
+          completedRituals: completed,
+          totalRituals: rituals.length,
+        }]);
       }, SPEED * step);
       demoTimeouts.current.push(t);
       step++;
     }
 
-    // Phase 5: Finale
+    // Phase 5: Finale + end text
     const endT = setTimeout(() => {
       confetti({ particleCount: 200, spread: 120, origin: { x: 0.5, y: 0.4 }, colors: ["#FFD60A", "#34C759", "#ffffff", "#FF6B35"] });
+      if (demoEndText) setDemoShowTg(true);
     }, SPEED * step);
     demoTimeouts.current.push(endT);
 
-    // Auto-stop demo after 4 more seconds
+    // Auto-stop demo after 5 more seconds
     const stopT = setTimeout(() => {
       setDemoActive(false);
+      setDemoShowTg(false);
       clearDemoTimeouts();
-    }, SPEED * step + 4000);
+    }, SPEED * step + 5000);
     demoTimeouts.current.push(stopT);
-  }, [demoActive, clearDemoTimeouts, rituals, weekData, personalWeekData, habits, personalHabits]);
+  }, [demoActive, clearDemoTimeouts, rituals, weekData, personalWeekData, habits, personalHabits, demoEndText]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -271,7 +295,7 @@ const Index = () => {
           <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 sm:w-4 sm:h-4 w-3 h-3 bg-foreground rounded cursor-pointer" onClick={startDemo} />
-            <h1 className="text-[10px] sm:text-lg font-bold text-foreground cursor-pointer" onClick={startDemo}>HumanOS</h1>
+            <h1 className="text-[10px] sm:text-lg font-bold text-foreground cursor-pointer" onClick={startDemo}>Focus</h1>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
             {/* Mobile Team Button */}
             <TeamButton mobile />
@@ -396,7 +420,12 @@ const Index = () => {
                     : ''
                     }`}
                 >
-                  <div className="flex flex-col items-center mb-2">
+                  <div className="flex flex-col items-center mb-2 relative">
+                    {/* {demoBrainDay === dayIdx && (
+                      <div className="absolute inset-0 z-20 flex items-center justify-center animate-in zoom-in-50 fade-in duration-300">
+                        <Brain className="w-10 h-10 text-habit-green drop-shadow-[0_0_12px_rgba(34,197,94,0.7)]" />
+                      </div>
+                    )} */}
                     <CircularProgress
                       value={dayProgress}
                       size={80}
@@ -569,7 +598,20 @@ const Index = () => {
         onSaveWeekData={setWeekData}
         onResetWeek={resetWeek}
         onLogout={logout}
+        demoEndText={demoEndText}
+        onSetDemoEndText={setDemoEndText}
       />
+
+      {/* Demo TG overlay */}
+      {demoShowTg && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="animate-in zoom-in-0 fade-in slide-in-from-bottom-4 duration-1000 flex flex-col items-center">
+            <p className="text-habit-green text-4xl sm:text-6xl font-black text-center tracking-tight drop-shadow-[0_0_30px_rgba(34,197,94,0.6)] animate-pulse">
+              {demoEndText}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Debug Indicator - REMOVE LATER */}
       {/* <div className="fixed bottom-0 right-0 bg-red-500 text-white p-2 z-50 text-xs">

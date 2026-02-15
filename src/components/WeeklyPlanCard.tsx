@@ -1,5 +1,11 @@
 import { TrendingUp, Flame, Target, Sun, Sparkles } from "lucide-react";
 import CircularProgress from "./CircularProgress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DayData {
   name: string;
@@ -110,27 +116,78 @@ const WeeklyPlanCard = ({
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {/* Morning ritual indicator */}
-            <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full">
-              <Sun className="w-3 h-3 text-amber-500" />
-              <span className="text-[10px] font-bold text-amber-500">{morningPercent}%</span>
-            </div>
+            <TooltipProvider>
+              {/* Morning ritual indicator */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full cursor-help">
+                    <Sun className="w-3 h-3 text-amber-500" />
+                    <span className="text-[10px] font-bold text-amber-500">{morningPercent}%</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Прогресс утреннего ритуала</p>
+                </TooltipContent>
+              </Tooltip>
 
-            {/* Streak indicator */}
-            {streak > 0 && (
-              <div className="flex items-center gap-1 bg-streak-orange/10 px-2 py-0.5 rounded-full">
-                <Flame className="w-3 h-3 text-streak-orange" />
-                <span className="text-[10px] font-bold text-streak-orange">{streak}</span>
-              </div>
-            )}
+              {/* Streak indicator - always visible */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-help ${
+                    streak > 0
+                      ? 'bg-streak-orange/10'
+                      : 'bg-muted/30'
+                  }`}>
+                    <Flame className={`w-3 h-3 ${
+                      streak > 0
+                        ? 'text-streak-orange'
+                        : 'text-muted-foreground/40'
+                    }`} />
+                    <span className={`text-[10px] font-bold ${
+                      streak > 0
+                        ? 'text-streak-orange'
+                        : 'text-muted-foreground/40'
+                    }`}>{streak}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">
+                    {streak > 0
+                      ? `Серия: ${streak} ${streak === 1 ? 'день' : streak < 5 ? 'дня' : 'дней'} подряд с полным выполнением`
+                      : 'Серия дней подряд с полным выполнением всех привычек'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
 
-            {/* Perfect days */}
-            {perfectDays > 0 && (
-              <div className="flex items-center gap-1 bg-habit-green/10 px-2 py-0.5 rounded-full">
-                <Target className="w-3 h-3 text-habit-green" />
-                <span className="text-[10px] font-bold text-habit-green">{perfectDays}</span>
-              </div>
-            )}
+              {/* Perfect days - always visible */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full cursor-help ${
+                    perfectDays > 0
+                      ? 'bg-habit-green/10'
+                      : 'bg-muted/30'
+                  }`}>
+                    <Target className={`w-3 h-3 ${
+                      perfectDays > 0
+                        ? 'text-habit-green'
+                        : 'text-muted-foreground/40'
+                    }`} />
+                    <span className={`text-[10px] font-bold ${
+                      perfectDays > 0
+                        ? 'text-habit-green'
+                        : 'text-muted-foreground/40'
+                    }`}>{perfectDays}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">
+                    {perfectDays > 0
+                      ? `Идеальных ${perfectDays === 1 ? 'день' : 'дня/дней'} на этой неделе (100% привычек)`
+                      : 'Количество дней со 100% выполнением привычек'}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 

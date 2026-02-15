@@ -1,5 +1,12 @@
-import { Sun, Check, Sparkles, Zap, Star, Heart, Trophy } from "lucide-react";
+import { Sun, Check, Sparkles, Zap, Star, Heart, Trophy, X } from "lucide-react";
+import { useState } from "react";
 import type { SunDayRecord } from "@/hooks/useUserData";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Ritual {
   text: string;
@@ -33,6 +40,8 @@ const MOTIVATIONAL_MESSAGES = [
 ];
 
 const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0, streak = 0, sunHistory = [] }: RitualCardProps) => {
+  const [selectedDay, setSelectedDay] = useState<SunDayRecord | null>(null);
+
   const completedCount = rituals.filter(r => r.done).length;
   const missedCount = rituals.length - completedCount;
   const progressPercent = rituals.length > 0 ? Math.round((completedCount / rituals.length) * 100) : 0;
@@ -49,6 +58,28 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0, strea
   const currentMotivation = completedCount > 0 && completedCount <= MOTIVATIONAL_MESSAGES.length
     ? MOTIVATIONAL_MESSAGES[completedCount - 1]
     : null;
+
+  // Format date for display
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  };
+
+  // Create today's record for viewing
+  const showTodayDetails = () => {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const completedRitualNames = rituals.filter(r => r.done).map(r => r.text);
+
+    const todayRecord: SunDayRecord = {
+      date: todayStr,
+      status: sunStatus,
+      completedRituals: completedRitualNames,
+      totalRituals: rituals.length,
+    };
+
+    setSelectedDay(todayRecord);
+  };
 
   return (
     <div className={`rounded-2xl p-3 transition-all duration-500 relative overflow-hidden flex flex-col h-full ${isComplete
@@ -173,46 +204,210 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0, strea
 
       {/* Weekly sun row - bottom */}
       <div className={`mt-auto pt-2 relative z-10 ${!isComplete && !currentMotivation ? 'border-t border-border/30' : 'border-t border-white/10'}`}>
-        <div className="flex items-center justify-center gap-1 sm:gap-2">
-          {/* Past days (earned suns) */}
-          {sunHistory.slice(-6).map((record, idx) => (
-            <Sun
-              key={`past-${idx}`}
-              className={`w-3 h-3 sm:w-5 sm:h-5 transition-all ${
-                record.status === 'burning'
-                  ? 'text-ritual-gold drop-shadow-[0_0_2px_rgba(255,214,10,0.6)]'
-                  : record.status === 'warm'
-                    ? isComplete ? 'text-white/40' : 'text-ritual-gold/35'
-                    : isComplete ? 'text-white/15' : 'text-muted-foreground/15'
-              }`}
-              strokeWidth={2}
-            />
-          ))}
-          {/* Today's live sun */}
-          <div className={`relative flex items-center justify-center ${sunStatus === 'burning' ? 'animate-pulse' : ''}`}>
-            {sunStatus === 'burning' && (
-              <div className="absolute rounded-full bg-ritual-gold/30 blur-[3px] w-4 h-4 sm:w-6 sm:h-6" />
-            )}
-            <Sun className={`w-3 h-3 sm:w-5 sm:h-5 relative z-10 transition-all duration-500 ${
-              sunStatus === 'burning'
-                ? isComplete
-                  ? 'text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]'
-                  : 'text-ritual-gold drop-shadow-[0_0_4px_rgba(255,214,10,0.8)]'
-                : sunStatus === 'warm'
-                  ? isComplete ? 'text-white/50' : 'text-ritual-gold/50'
-                  : isComplete ? 'text-white/15' : 'text-muted-foreground/15'
-            }`} strokeWidth={2} />
+        <TooltipProvider>
+          <div className="flex items-center justify-center gap-1 sm:gap-2">
+            {/* Past days (earned suns) - clickable */}
+            {sunHistory.slice(-6).map((record, idx) => {
+              const statusText = record.status === 'burning'
+                ? '🔥 Идеальное утро'
+                : record.status === 'warm'
+                  ? '✨ Хорошее утро'
+                  : '😔 Пропущено';
+              const dateText = formatDate(record.date);
+              const completedText = `${record.completedRituals?.length || 0}/${record.totalRituals || 0} ритуалов`;
+
+              return (
+                <Tooltip key={`past-${idx}`}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setSelectedDay(record)}
+                      className="hover:scale-110 transition-transform cursor-pointer"
+                    >
+                      <Sun
+                        className={`w-3 h-3 sm:w-5 sm:h-5 transition-all ${
+                          record.status === 'burning'
+                            ? 'text-ritual-gold drop-shadow-[0_0_2px_rgba(255,214,10,0.6)]'
+                            : record.status === 'warm'
+                              ? isComplete ? 'text-white/40' : 'text-ritual-gold/35'
+                              : isComplete ? 'text-white/15' : 'text-muted-foreground/15'
+                        }`}
+                        strokeWidth={2}
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      <p className="font-bold">{dateText}</p>
+                      <p>{statusText}</p>
+                      <p className="text-muted-foreground">{completedText}</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+            {/* Today's live sun - clickable */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={showTodayDetails}
+                  className="hover:scale-110 transition-transform cursor-pointer"
+                >
+                  <div className={`relative flex items-center justify-center ${sunStatus === 'burning' ? 'animate-pulse' : ''}`}>
+                    {sunStatus === 'burning' && (
+                      <div className="absolute rounded-full bg-ritual-gold/30 blur-[3px] w-4 h-4 sm:w-6 sm:h-6" />
+                    )}
+                    <Sun className={`w-3 h-3 sm:w-5 sm:h-5 relative z-10 transition-all duration-500 ${
+                      sunStatus === 'burning'
+                        ? isComplete
+                          ? 'text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]'
+                          : 'text-ritual-gold drop-shadow-[0_0_4px_rgba(255,214,10,0.8)]'
+                        : sunStatus === 'warm'
+                          ? isComplete ? 'text-white/50' : 'text-ritual-gold/50'
+                          : isComplete ? 'text-white/15' : 'text-muted-foreground/15'
+                    }`} strokeWidth={2} />
+                  </div>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs">
+                  <p className="font-bold">Сегодня</p>
+                  <p>
+                    {sunStatus === 'burning'
+                      ? '🔥 Идеальное утро'
+                      : sunStatus === 'warm'
+                        ? '✨ Хорошее утро'
+                        : '😔 Пропущено'}
+                  </p>
+                  <p className="text-muted-foreground">{completedCount}/{rituals.length} ритуалов</p>
+                  <p className="text-muted-foreground mt-1">Кликни для подробностей</p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+            {/* Future days (gray placeholders) */}
+            {Array.from({ length: Math.max(0, 6 - sunHistory.slice(-6).length) }, (_, i) => (
+              <Tooltip key={`future-${i}`}>
+                <TooltipTrigger asChild>
+                  <div className="cursor-help">
+                    <Sun
+                      className={`w-3 h-3 sm:w-5 sm:h-5 ${isComplete ? 'text-white/15' : 'text-muted-foreground/15'}`}
+                      strokeWidth={2}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">Будущий день</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
           </div>
-          {/* Future days (gray placeholders) */}
-          {Array.from({ length: Math.max(0, 6 - sunHistory.slice(-6).length) }, (_, i) => (
-            <Sun
-              key={`future-${i}`}
-              className={`w-3 h-3 sm:w-5 sm:h-5 ${isComplete ? 'text-white/15' : 'text-muted-foreground/15'}`}
-              strokeWidth={2}
-            />
-          ))}
-        </div>
+        </TooltipProvider>
       </div>
+
+      {/* Modal for day details */}
+      {selectedDay && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setSelectedDay(null)}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl p-5 max-w-sm w-full mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Sun className={`w-6 h-6 ${
+                  selectedDay.status === 'burning'
+                    ? 'text-ritual-gold'
+                    : selectedDay.status === 'warm'
+                      ? 'text-ritual-gold/50'
+                      : 'text-muted-foreground/30'
+                }`} strokeWidth={2} />
+                <div>
+                  <h3 className="font-bold text-foreground">
+                    {formatDate(selectedDay.date)}
+                    {new Date(selectedDay.date).toDateString() === new Date().toDateString() && (
+                      <span className="text-habit-green ml-1">(Сегодня)</span>
+                    )}
+                  </h3>
+                  <p className="text-[10px] text-muted-foreground">
+                    {selectedDay.status === 'burning'
+                      ? '🔥 Идеальное утро'
+                      : selectedDay.status === 'warm'
+                        ? '✨ Хорошее утро'
+                        : '😔 Пропущено'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedDay(null)}
+                className="w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4 text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Progress */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Прогресс</span>
+                <span className="font-bold text-foreground">
+                  {selectedDay.completedRituals?.length || 0}/{selectedDay.totalRituals || 0}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all ${
+                    selectedDay.status === 'burning'
+                      ? 'bg-ritual-gold'
+                      : selectedDay.status === 'warm'
+                        ? 'bg-ritual-gold/60'
+                        : 'bg-muted-foreground/30'
+                  }`}
+                  style={{
+                    width: `${selectedDay.totalRituals > 0
+                      ? ((selectedDay.completedRituals?.length || 0) / selectedDay.totalRituals) * 100
+                      : 0}%`
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Completed rituals list */}
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+                Выполненные ритуалы
+              </p>
+              {selectedDay.completedRituals && selectedDay.completedRituals.length > 0 ? (
+                <div className="space-y-1.5">
+                  {selectedDay.completedRituals.map((ritual, idx) => (
+                    <div key={idx} className="flex items-center gap-2 bg-habit-green/10 rounded-lg px-3 py-2">
+                      <div className="w-4 h-4 rounded bg-habit-green flex items-center justify-center flex-shrink-0">
+                        <Check className="w-2.5 h-2.5 text-white stroke-[3]" />
+                      </div>
+                      <span className="text-xs text-foreground">{ritual}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">Ничего не выполнено</p>
+              )}
+            </div>
+
+            {/* Info for today */}
+            {new Date(selectedDay.date).toDateString() === new Date().toDateString() && (
+              <div className="mt-4 pt-3 border-t border-border">
+                <div className="flex items-start gap-2">
+                  <div className="w-1 h-1 rounded-full bg-habit-green mt-1.5 flex-shrink-0" />
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    Твой результат сохранится автоматически завтра утром. Все выполненные ритуалы будут в истории.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

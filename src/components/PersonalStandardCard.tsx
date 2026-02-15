@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trophy, Check, Flame, Target, Zap, Mountain, Star, Brain } from "lucide-react";
+import { Plus, Trophy, Check, Flame, Target, Zap, Mountain, Star, Brain, ChevronLeft, ChevronRight } from "lucide-react";
 import NeuronHistoryModal from "./NeuronHistoryModal";
 import type { NeuronWeekRecord } from "@/hooks/useUserData";
 
@@ -40,24 +40,39 @@ const getDotStatus = (completedCount: number, totalHabits: number): 'full' | 'pa
 
 const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHistory = [] }: PersonalStandardCardProps) => {
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = last week, etc.
   const dayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const todayIndex = (new Date().getDay() + 6) % 7;
 
-  // Calculate current week neurons
-  const currentNeurons = habits.reduce((count, _, habitIdx) => {
-    const completedDays = weekData.filter(day => day.completedIndices.includes(habitIdx)).length;
-    return count + (completedDays >= 4 ? 1 : 0);
-  }, 0);
+  // Get data for the currently viewed week
+  const isViewingHistory = weekOffset > 0;
+  const historyIndex = neuronHistory.length - weekOffset;
+  const viewedWeek = isViewingHistory && historyIndex >= 0 ? neuronHistory[historyIndex] : null;
 
-  // Calculate total completed habits
-  const totalCompleted = weekData.reduce((sum, day) => sum + day.completedIndices.length, 0);
+  // Use historical data if viewing history, otherwise use current week data
+  const displayHabits = viewedWeek ? viewedWeek.habitResults.map(hr => hr.name) : habits;
+  const displayWeekData = viewedWeek?.weekData || weekData;
 
-  // Show quote after every 2nd completion (quoteIndex is 0-based, so we check >= 2)
-  const quoteIndex = totalCompleted >= 2 ? Math.floor((totalCompleted - 1) / 2) % MOTIVATIONAL_QUOTES.length : -1;
+  const canGoBack = weekOffset < neuronHistory.length;
+  const canGoForward = weekOffset > 0;
+
+  // Calculate neurons for displayed week
+  const displayNeurons = viewedWeek
+    ? viewedWeek.neurons
+    : habits.reduce((count, _, habitIdx) => {
+        const completedDays = weekData.filter(day => day.completedIndices.includes(habitIdx)).length;
+        return count + (completedDays >= 4 ? 1 : 0);
+      }, 0);
+
+  // Calculate total completed habits for displayed week
+  const totalCompleted = displayWeekData.reduce((sum, day) => sum + day.completedIndices.length, 0);
+
+  // Show quote after every 2nd completion (only for current week)
+  const quoteIndex = !isViewingHistory && totalCompleted >= 2 ? Math.floor((totalCompleted - 1) / 2) % MOTIVATIONAL_QUOTES.length : -1;
   const currentQuote = quoteIndex >= 0 ? MOTIVATIONAL_QUOTES[quoteIndex] : null;
 
   const getHabitProgress = (habitIndex: number) => {
-    const completed = weekData.filter(day =>
+    const completed = displayWeekData.filter(day =>
       day.completedIndices.includes(habitIndex)
     ).length;
     return Math.round((completed / 7) * 100);
@@ -66,15 +81,47 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
   return (
     <div className="bg-card rounded-2xl p-3 shadow-card border border-border/50 col-span-2 lg:col-span-1 flex flex-col h-full">
       <div className="flex items-center justify-between mb-2">
-        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-          Выработка привычек
+        <div className="flex items-center gap-2">
+          <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+            Выработка привычек
+          </div>
+          {isViewingHistory && viewedWeek && (
+            <div className="text-[9px] text-habit-green font-medium">
+              {viewedWeek.weekStart} — {viewedWeek.weekEnd}
+            </div>
+          )}
         </div>
-        <button
-          onClick={onAddHabit}
-          className="w-4 h-4 rounded-full bg-muted hover:bg-muted-foreground/20 flex items-center justify-center transition-colors"
-        >
-          <Plus className="w-2.5 h-2.5 text-muted-foreground" />
-        </button>
+        <div className="flex items-center gap-1">
+          {/* Navigation arrows */}
+          <button
+            onClick={() => setWeekOffset(prev => prev + 1)}
+            disabled={!canGoBack}
+            className={`w-4 h-4 flex items-center justify-center transition-colors ${
+              canGoBack
+                ? 'text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground/20 cursor-not-allowed'
+            }`}
+          >
+            <ChevronLeft className="w-3 h-3" />
+          </button>
+          <button
+            onClick={() => setWeekOffset(prev => Math.max(0, prev - 1))}
+            disabled={!canGoForward}
+            className={`w-4 h-4 flex items-center justify-center transition-colors ${
+              canGoForward
+                ? 'text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground/20 cursor-not-allowed'
+            }`}
+          >
+            <ChevronRight className="w-3 h-3" />
+          </button>
+          <button
+            onClick={onAddHabit}
+            className="w-4 h-4 rounded-full bg-muted hover:bg-muted-foreground/20 flex items-center justify-center transition-colors ml-1"
+          >
+            <Plus className="w-2.5 h-2.5 text-muted-foreground" />
+          </button>
+        </div>
       </div>
 
       {/* Matrix Table with Progress */}
@@ -98,7 +145,7 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
             </tr>
           </thead>
           <tbody>
-            {habits.map((habit, habitIdx) => {
+            {displayHabits.map((habit, habitIdx) => {
               const progress = getHabitProgress(habitIdx);
               const isPerfect = progress === 100;
 
@@ -107,19 +154,34 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
                   <td className="text-[10px] font-medium text-foreground py-1 pr-1 whitespace-nowrap">
                     {habit}
                   </td>
-                  {weekData.map((day, dayIdx) => {
+                  {displayWeekData.map((day, dayIdx) => {
                     const isDone = day.completedIndices.includes(habitIdx);
                     return (
                       <td key={dayIdx} className="text-center py-1 px-0.5">
-                        <button
-                          onClick={() => onToggle(dayIdx, habitIdx)}
-                          className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all ${isDone
-                              ? 'bg-habit-green'
-                              : 'border border-muted-foreground/30 hover:border-muted-foreground'
+                        {isViewingHistory ? (
+                          // Read-only for historical weeks
+                          <div
+                            className={`w-3.5 h-3.5 rounded flex items-center justify-center ${
+                              isDone
+                                ? 'bg-habit-green'
+                                : 'border border-muted-foreground/20'
                             }`}
-                        >
-                          {isDone && <Check className="w-2 h-2 text-white" />}
-                        </button>
+                          >
+                            {isDone && <Check className="w-2 h-2 text-white" />}
+                          </div>
+                        ) : (
+                          // Interactive for current week
+                          <button
+                            onClick={() => onToggle(dayIdx, habitIdx)}
+                            className={`w-3.5 h-3.5 rounded flex items-center justify-center transition-all ${
+                              isDone
+                                ? 'bg-habit-green'
+                                : 'border border-muted-foreground/30 hover:border-muted-foreground'
+                            }`}
+                          >
+                            {isDone && <Check className="w-2 h-2 text-white" />}
+                          </button>
+                        )}
                       </td>
                     );
                   })}
@@ -165,17 +227,18 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
         <div className="mt-3 pt-2 border-t border-border/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1">
-              {weekData.map((day, idx) => {
+              {displayWeekData.map((day, idx) => {
                 const completedCount = day.completedIndices.length;
-                const status = getDotStatus(completedCount, habits.length);
-                const isToday = idx === todayIndex;
+                const totalHabits = displayHabits.length;
+                const status = getDotStatus(completedCount, totalHabits);
+                const isToday = idx === todayIndex && !isViewingHistory;
 
                 return (
                   <div
                     key={idx}
                     className={`relative transition-all duration-300 ${isToday ? 'scale-125' : ''
                       }`}
-                    title={`${day.name}: ${completedCount}/${habits.length}`}
+                    title={`${day.name}: ${completedCount}/${totalHabits}`}
                   >
                     <div
                       className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${status === 'full'
@@ -200,7 +263,7 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
             >
               <Brain className="w-3 h-3 text-habit-green" />
               <span className="text-[10px] font-bold text-habit-green">
-                {currentNeurons}
+                {displayNeurons}
               </span>
             </button>
           </div>
@@ -211,7 +274,10 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
         open={historyOpen}
         onClose={() => setHistoryOpen(false)}
         history={neuronHistory}
-        currentNeurons={currentNeurons}
+        currentNeurons={habits.reduce((count, _, habitIdx) => {
+          const completedDays = weekData.filter(day => day.completedIndices.includes(habitIdx)).length;
+          return count + (completedDays >= 4 ? 1 : 0);
+        }, 0)}
         currentTotalHabits={habits.length}
       />
     </div>

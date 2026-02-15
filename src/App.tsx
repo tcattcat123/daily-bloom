@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Welcome from "./pages/Welcome";
 import Teams from "./pages/Teams";
 import NotFound from "./pages/NotFound";
+import Start from "./pages/Start";
 import SupportRayNotifications from "@/components/SupportRayNotifications";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 
@@ -81,6 +82,7 @@ const App = () => (
                 <Teams />
               </ProtectedRoute>
             } />
+            <Route path="/start" element={<Start />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

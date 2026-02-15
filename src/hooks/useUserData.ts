@@ -39,6 +39,8 @@ interface Statistics {
 export interface SunDayRecord {
   date: string; // ISO date
   status: 'burning' | 'warm' | 'gray';
+  completedRituals: string[]; // Names of completed rituals
+  totalRituals: number; // Total number of rituals that day
 }
 
 export interface NeuronWeekRecord {
@@ -48,6 +50,7 @@ export interface NeuronWeekRecord {
   neurons: number; // how many habits counted as "built"
   totalHabits: number;
   habitResults: { name: string; completedDays: number; isNeuron: boolean }[];
+  weekData?: DayData[]; // Full week grid data for visualization
 }
 
 export interface CalendarEvent {
@@ -75,6 +78,7 @@ interface UserDataState {
   neuronHistory: NeuronWeekRecord[];
   sunHistory: SunDayRecord[];
   ritualCompletedAt?: string; // ISO timestamp when all rituals were completed
+  demoEndText: string; // Text shown at end of demo animation
 }
 
 const generateWeek = (): DayData[] => {
@@ -149,6 +153,7 @@ const getDefaultState = (): UserDataState => ({
   neuronHistory: [],
   sunHistory: [],
   ritualCompletedAt: undefined,
+  demoEndText: '@Humanos_start',
 });
 
 // Process state for daily/weekly resets
@@ -202,9 +207,14 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
 
     // Save sun record for yesterday
     const prevSunHistory: SunDayRecord[] = Array.isArray(newState.sunHistory) ? newState.sunHistory : [];
+    const completedRitualNames = (parsed.rituals || [])
+      .filter((r: Ritual) => r.done)
+      .map((r: Ritual) => r.text);
     const sunRecord: SunDayRecord = {
       date: parsed.lastRitualsResetDate || todayStr,
       status: sunStatus,
+      completedRituals: completedRitualNames,
+      totalRituals: totalRituals,
     };
     // Keep last 30 days
     const updatedSunHistory = [...prevSunHistory, sunRecord].slice(-30);
@@ -252,6 +262,7 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
       neurons,
       totalHabits: (parsed.personalHabits || []).length,
       habitResults,
+      weekData: parsed.personalWeekData || [],
     };
 
     const updatedHistory = [...prevHistory, newRecord].slice(-MAX_NEURON_HISTORY);
@@ -536,6 +547,11 @@ export function useUserData() {
     }));
   }, []);
 
+  // Demo end text
+  const setDemoEndText = useCallback((demoEndText: string) => {
+    setState((prev) => ({ ...prev, demoEndText }));
+  }, []);
+
   // Layout
   const setLayout = useCallback((layout: 'vertical' | 'horizontal') => {
     setState((prev) => ({ ...prev, layout }));
@@ -562,6 +578,7 @@ export function useUserData() {
         neurons,
         totalHabits: prev.personalHabits.length,
         habitResults,
+        weekData: prev.personalWeekData,
       };
       const prevHistory = Array.isArray(prev.neuronHistory) ? prev.neuronHistory : [];
       const updatedHistory = [...prevHistory, newRecord].slice(-MAX_NEURON_HISTORY);
@@ -603,6 +620,7 @@ export function useUserData() {
     removeCalendarEvent,
     setLayout,
     setTheme,
+    setDemoEndText,
     resetWeek,
     clearAllData,
   };

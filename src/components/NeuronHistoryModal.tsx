@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Brain, TrendingUp, TrendingDown, Minus, Trophy, Target } from "lucide-react";
+import { Brain, TrendingUp, TrendingDown, Minus, Trophy, Target, ChevronDown, ChevronUp, Check } from "lucide-react";
 import type { NeuronWeekRecord } from "@/hooks/useUserData";
 
 interface NeuronHistoryModalProps {
@@ -11,6 +12,7 @@ interface NeuronHistoryModalProps {
 }
 
 const NeuronHistoryModal = ({ open, onClose, history, currentNeurons, currentTotalHabits }: NeuronHistoryModalProps) => {
+  const [expandedWeek, setExpandedWeek] = useState<number | null>(null);
   // Find most improved habit across all history
   const getMostImproved = () => {
     if (history.length < 2) return null;
@@ -111,41 +113,111 @@ const NeuronHistoryModal = ({ open, onClose, history, currentNeurons, currentTot
             {[...history].reverse().map((week, revIdx) => {
               const idx = history.length - 1 - revIdx;
               const trend = getTrend(idx);
+              const isExpanded = expandedWeek === idx;
+              const dayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
               return (
-                <div key={idx} className="rounded-lg border border-border/40 p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-foreground">
-                        {week.weekStart} — {week.weekEnd}
-                      </span>
-                      {trend === 'up' && <TrendingUp className="w-3 h-3 text-habit-green" />}
-                      {trend === 'down' && <TrendingDown className="w-3 h-3 text-destructive" />}
-                      {trend === 'neutral' && <Minus className="w-3 h-3 text-muted-foreground" />}
+                <div key={idx} className="rounded-lg border border-border/40 overflow-hidden">
+                  {/* Week header - clickable */}
+                  <button
+                    onClick={() => setExpandedWeek(isExpanded ? null : idx)}
+                    className="w-full p-3 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-foreground">
+                          {week.weekStart} — {week.weekEnd}
+                        </span>
+                        {trend === 'up' && <TrendingUp className="w-3 h-3 text-habit-green" />}
+                        {trend === 'down' && <TrendingDown className="w-3 h-3 text-destructive" />}
+                        {trend === 'neutral' && <Minus className="w-3 h-3 text-muted-foreground" />}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-habit-green">
+                          {week.neurons}/{week.totalHabits}
+                        </span>
+                        {isExpanded ? (
+                          <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
                     </div>
-                    <span className="text-xs font-bold text-habit-green">
-                      {week.neurons}/{week.totalHabits}
-                    </span>
-                  </div>
-                  <div className="space-y-1">
-                    {week.habitResults.map((hr, hrIdx) => (
-                      <div key={hrIdx} className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          {hr.isNeuron ? (
-                            <Target className="w-3 h-3 text-habit-green" />
-                          ) : (
-                            <Target className="w-3 h-3 text-muted-foreground/30" />
-                          )}
-                          <span className={`text-[11px] ${hr.isNeuron ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                            {hr.name}
+
+                    {/* Habit list - always visible */}
+                    <div className="space-y-1">
+                      {week.habitResults.map((hr, hrIdx) => (
+                        <div key={hrIdx} className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            {hr.isNeuron ? (
+                              <Target className="w-3 h-3 text-habit-green" />
+                            ) : (
+                              <Target className="w-3 h-3 text-muted-foreground/30" />
+                            )}
+                            <span className={`text-[11px] ${hr.isNeuron ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                              {hr.name}
+                            </span>
+                          </div>
+                          <span className={`text-[10px] font-bold ${hr.isNeuron ? 'text-habit-green' : 'text-muted-foreground'}`}>
+                            {hr.completedDays}/7
                           </span>
                         </div>
-                        <span className={`text-[10px] font-bold ${hr.isNeuron ? 'text-habit-green' : 'text-muted-foreground'}`}>
-                          {hr.completedDays}/7
-                        </span>
+                      ))}
+                    </div>
+                  </button>
+
+                  {/* Expanded week grid */}
+                  {isExpanded && week.weekData && week.weekData.length > 0 && (
+                    <div className="px-3 pb-3 pt-2 border-t border-border/30 bg-muted/20">
+                      <div className="text-[10px] font-medium text-muted-foreground mb-2">
+                        Недельный график:
                       </div>
-                    ))}
-                  </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr>
+                              <th className="text-left text-[8px] font-medium text-muted-foreground pb-1 pr-1">
+                                {/* Empty header for habit names */}
+                              </th>
+                              {dayLabels.map((day) => (
+                                <th
+                                  key={day}
+                                  className="text-center text-[8px] font-medium text-muted-foreground pb-1 px-0.5"
+                                >
+                                  {day}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {week.habitResults.map((hr, habitIdx) => (
+                              <tr key={habitIdx}>
+                                <td className="text-[9px] font-medium text-foreground py-0.5 pr-1 whitespace-nowrap">
+                                  {hr.name}
+                                </td>
+                                {week.weekData!.map((day, dayIdx) => {
+                                  const isDone = day.completedIndices.includes(habitIdx);
+                                  return (
+                                    <td key={dayIdx} className="text-center py-0.5 px-0.5">
+                                      <div
+                                        className={`w-3 h-3 rounded flex items-center justify-center ${
+                                          isDone
+                                            ? 'bg-habit-green'
+                                            : 'border border-muted-foreground/20'
+                                        }`}
+                                      >
+                                        {isDone && <Check className="w-1.5 h-1.5 text-white" />}
+                                      </div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
