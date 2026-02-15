@@ -176,6 +176,14 @@ export function useAuth() {
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
+
+    // Очистка всех ключей связанных с пользовательскими данными
+    const keysToRemove = Object.keys(localStorage).filter(key =>
+      key.startsWith('humanos_data_') ||
+      key.startsWith('admin_auth')
+    );
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+
     setUser(null);
     setSession(null);
     setProfile(null);
@@ -198,6 +206,7 @@ export function useAuth() {
     user: profile ? {
       id: user?.id || '',
       nickname: profile.nickname || '',
+      email: user?.email,
       created_at: profile.created_at,
       updated_at: profile.created_at
     } : null,

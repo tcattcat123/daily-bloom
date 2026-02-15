@@ -269,7 +269,10 @@ const processStateResets = (parsed: UserDataState): UserDataState => {
 
     newState = {
       ...newState,
-      weekData: currentWeek,
+      weekData: currentWeek.map((day, idx) => ({
+        ...day,
+        enabledHabits: parsed.weekData?.[idx]?.enabledHabits,
+      })),
       personalWeekData: currentWeek,
       neuronHistory: updatedHistory,
       statistics: {
@@ -298,10 +301,11 @@ export function useUserData() {
   const saveToSupabase = useCallback(async (data: UserDataState) => {
     if (!user || isSavingRef.current) return;
 
+    console.log(`[useUserData] Saving data for user: ${user.id}`);
     isSavingRef.current = true;
     try {
       // Check if record exists
-      const { data: existing } = await supabase
+      const { data: existing} = await supabase
         .from('user_data')
         .select('id')
         .eq('user_id', user.id)
@@ -353,6 +357,7 @@ export function useUserData() {
         return;
       }
 
+      console.log(`[useUserData] Loading data for user: ${user.id}`);
       try {
         // Try to load from Supabase first
         const { data: supabaseData, error } = await supabase

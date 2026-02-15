@@ -119,29 +119,29 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0, strea
           <div
             key={idx}
             onClick={() => onToggle(idx)}
-            className={`flex items-center gap-1.5 sm:gap-2 w-full px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-md cursor-pointer transition-all duration-300 ${ritual.done
+            className={`flex items-center gap-1.5 sm:gap-2 w-full px-1.5 sm:px-2.5 py-1 sm:py-1.5 rounded-md transition-all duration-300 cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${ritual.done
                 ? isComplete
                   ? 'bg-white/20 text-white'
                   : 'bg-habit-green/10 text-foreground'
                 : isComplete
-                  ? 'bg-white/10 text-white/80 hover:bg-white/15'
-                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/70'
+                  ? 'bg-white/10 text-white/80'
+                  : 'bg-muted/40 text-muted-foreground'
               }`}
           >
-            <button
+            <div
               className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded flex items-center justify-center flex-shrink-0 transition-all duration-300 ${ritual.done
                   ? isComplete
                     ? 'bg-white shadow-sm'
                     : 'bg-habit-green shadow-sm'
                   : isComplete
-                    ? 'border-2 border-white/40 hover:border-white/60'
-                    : 'border-2 border-muted-foreground/30 hover:border-muted-foreground/50'
+                    ? 'border-2 border-white/40'
+                    : 'border-2 border-muted-foreground/30'
                 }`}
             >
               {ritual.done && (
                 <Check className={`w-2 h-2 sm:w-2.5 sm:h-2.5 ${isComplete ? 'text-habit-green' : 'text-white'} stroke-[3]`} />
               )}
-            </button>
+            </div>
             <span className={`text-[10px] sm:text-[12px] font-medium flex-1 ${ritual.done ? 'line-through opacity-60' : ''}`}>
               {ritual.text}
             </span>
@@ -408,6 +408,7 @@ const RitualCard = ({ rituals, onToggle, isComplete, dailyPlanPercent = 0, strea
           </div>
         </div>
       )}
+
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Plus, Trophy, Check, Flame, Target, Zap, Mountain, Star, Brain, ChevronLeft, ChevronRight } from "lucide-react";
 import NeuronHistoryModal from "./NeuronHistoryModal";
+import TimerModal from "./TimerModal";
 import type { NeuronWeekRecord } from "@/hooks/useUserData";
 
 // Motivational quotes for personal development
@@ -28,6 +29,7 @@ interface PersonalStandardCardProps {
   onAddHabit: () => void;
   neuronHistory?: NeuronWeekRecord[];
   compact?: boolean;
+  demoActive?: boolean;
 }
 
 // Get dot status for a day: 'full' (all done), 'partial' (≥2 done), 'empty' (< 2 done)
@@ -38,9 +40,14 @@ const getDotStatus = (completedCount: number, totalHabits: number): 'full' | 'pa
   return 'empty';
 };
 
-const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHistory = [] }: PersonalStandardCardProps) => {
+const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHistory = [], demoActive = false }: PersonalStandardCardProps) => {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, 1 = last week, etc.
+  const [timerOpen, setTimerOpen] = useState(false);
+  const [timerMinutes, setTimerMinutes] = useState(2);
+  const [timerHabitIndex, setTimerHabitIndex] = useState<{ day: number; habit: number } | null>(null);
+  const [timerWaiting, setTimerWaiting] = useState(false);
+  const [timerCompleted, setTimerCompleted] = useState(false);
   const dayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const todayIndex = (new Date().getDay() + 6) % 7;
 
@@ -256,10 +263,70 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
               })}
             </div>
 
+            {/* Timer buttons - between dots and neuron */}
+            {!isViewingHistory && (
+              <div className="flex gap-2 ml-3">
+                <div className="relative">
+                  {/* Animated green glow - when completed or demo active */}
+                  {(timerCompleted || demoActive) && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {/* Outer glow */}
+                      <div className="absolute inset-0 rounded-full bg-habit-green/20 blur-md animate-pulse" />
+                      {/* Middle pulsing ring */}
+                      <div className="absolute inset-0 rounded-full border-2 border-habit-green/30 animate-[ping_2s_ease-in-out_infinite]" />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      setTimerMinutes(2);
+                      setTimerHabitIndex(null);
+                      setTimerOpen(true);
+                      setTimerCompleted(false);
+                    }}
+                    className={`relative w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center transition-all shadow-sm ${
+                      timerCompleted || demoActive
+                        ? 'bg-habit-green text-white shadow-[0_0_12px_rgba(34,197,94,0.8)]'
+                        : 'bg-destructive text-destructive-foreground hover:shadow-md hover:scale-110 active:scale-95'
+                    }`}
+                    title="Таймер 2 минуты"
+                  >
+                    2
+                  </button>
+                </div>
+                <div className="relative">
+                  {/* Animated green glow - when completed or demo active */}
+                  {(timerCompleted || demoActive) && (
+                    <div className="absolute inset-0 pointer-events-none">
+                      {/* Outer glow */}
+                      <div className="absolute inset-0 rounded-full bg-habit-green/20 blur-md animate-pulse" />
+                      {/* Middle pulsing ring */}
+                      <div className="absolute inset-0 rounded-full border-2 border-habit-green/30 animate-[ping_2s_ease-in-out_infinite]" />
+                    </div>
+                  )}
+                  <button
+                    onClick={() => {
+                      setTimerMinutes(5);
+                      setTimerHabitIndex(null);
+                      setTimerOpen(true);
+                      setTimerCompleted(false);
+                    }}
+                    className={`relative w-5 h-5 rounded-full font-bold text-[10px] flex items-center justify-center transition-all shadow-sm ${
+                      timerCompleted || demoActive
+                        ? 'bg-habit-green text-white shadow-[0_0_12px_rgba(34,197,94,0.8)]'
+                        : 'bg-destructive text-destructive-foreground hover:shadow-md hover:scale-110 active:scale-95'
+                    }`}
+                    title="Таймер 5 минут"
+                  >
+                    5
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Neuron counter - clickable */}
             <button
               onClick={() => setHistoryOpen(true)}
-              className="flex items-center gap-1 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-1 hover:opacity-80 transition-opacity ml-auto"
             >
               <Brain className="w-3 h-3 text-habit-green" />
               <span className="text-[10px] font-bold text-habit-green">
@@ -279,6 +346,31 @@ const PersonalStandardCard = ({ habits, weekData, onToggle, onAddHabit, neuronHi
           return count + (completedDays >= 4 ? 1 : 0);
         }, 0)}
         currentTotalHabits={habits.length}
+      />
+
+      {/* Timer Modal */}
+      <TimerModal
+        open={timerOpen}
+        onClose={() => {
+          setTimerOpen(false);
+          setTimerWaiting(false);
+        }}
+        minutes={timerMinutes}
+        onComplete={() => {
+          if (timerHabitIndex) {
+            onToggle(timerHabitIndex.day, timerHabitIndex.habit);
+          }
+          setTimerOpen(false);
+          setTimerHabitIndex(null);
+          setTimerWaiting(false);
+          setTimerCompleted(true);
+          setTimeout(() => {
+            setTimerCompleted(false);
+          }, 3000);
+        }}
+        onTimerFinish={() => {
+          setTimerWaiting(true);
+        }}
       />
     </div>
   );

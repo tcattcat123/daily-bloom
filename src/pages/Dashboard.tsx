@@ -9,6 +9,7 @@ import PersonalStandardCard from "@/components/PersonalStandardCard";
 import PillTrackerCard from "@/components/PillTrackerCard";
 import WeeklyPlanCard from "@/components/WeeklyPlanCard";
 import HabitSettingsModal from "@/components/HabitSettingsModal";
+import ProfileModal from "@/components/ProfileModal";
 import SupportRayButton from "@/components/SupportRayButton";
 import CalendarCard from "@/components/CalendarCard";
 import TeamButton from "@/components/TeamButton";
@@ -59,7 +60,9 @@ const Index = () => {
   } = useUserData();
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const prevRitualCompleteRef = useRef(false);
+  const prevUserIdForDemoRef = useRef<string | undefined>();
 
   // === DEMO MODE ===
   const [demoActive, setDemoActive] = useState(false);
@@ -206,6 +209,19 @@ const Index = () => {
     return () => clearDemoTimeouts();
   }, [clearDemoTimeouts]);
 
+  // Disable demo mode when user changes
+  useEffect(() => {
+    if (user?.id && prevUserIdForDemoRef.current && prevUserIdForDemoRef.current !== user?.id) {
+      if (demoActive) {
+        console.log('[Dashboard] User changed, clearing demo mode');
+        clearDemoTimeouts();
+        setDemoActive(false);
+        setDemoShowTg(false);
+      }
+    }
+    prevUserIdForDemoRef.current = user?.id;
+  }, [user?.id, demoActive, clearDemoTimeouts]);
+
   // Effective data: demo overrides real data
   const effRituals = demoActive ? demoRituals : rituals;
   const effWeekData = demoActive ? demoWeekData : weekData;
@@ -289,7 +305,7 @@ const Index = () => {
       <header className="flex flex-wrap items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
           {/* User Avatar */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setProfileOpen(true)}>
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-xs font-bold">
               {user?.nickname?.charAt(0).toUpperCase() || 'U'}
             </div>
@@ -299,7 +315,7 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 sm:w-4 sm:h-4 w-3 h-3 bg-foreground rounded cursor-pointer" onClick={startDemo} />
             <h1 className="text-[10px] sm:text-lg font-bold text-foreground cursor-pointer" onClick={startDemo}>Focus</h1>
-            <span className="text-[8px] sm:text-[10px] text-muted-foreground/60 font-mono">v{APP_VERSION}</span>
+            <span className="hidden sm:inline text-[8px] sm:text-[10px] text-muted-foreground/60 font-mono">v{APP_VERSION}</span>
             <span className="text-xs text-muted-foreground ml-1">{currentDate}</span>
             {/* Mobile Team Button */}
             <TeamButton mobile />
@@ -313,10 +329,6 @@ const Index = () => {
               <Play className="w-3 h-3" />
               Начать
             </Button>
-            {/* Mobile Theme Toggle */}
-            <div className="sm:hidden">
-              <ModeToggle />
-            </div>
             {/* Mobile Settings Button */}
             <Button
               variant="outline"
@@ -403,6 +415,7 @@ const Index = () => {
           onToggle={demoActive ? () => {} : togglePersonalHabit}
           onAddHabit={() => setSettingsOpen(true)}
           neuronHistory={neuronHistory}
+          demoActive={demoActive}
         />
       </div >
 
@@ -610,6 +623,15 @@ const Index = () => {
         onLogout={logout}
         demoEndText={demoEndText}
         onSetDemoEndText={setDemoEndText}
+      />
+
+      {/* Profile Modal */}
+      <ProfileModal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        userId={user?.id || ''}
+        userNickname={user?.nickname || 'User'}
+        userEmail={user?.email}
       />
 
       {/* Demo TG overlay */}
