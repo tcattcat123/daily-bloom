@@ -39,7 +39,6 @@ const ReceiptComparison = () => {
 
   const coffeeTotal = useCountUp(400, 1200, visible);
   const focusDay = useCountUp(13, 1400, visible);
-  const savedYear = useCountUp(4800, 2000, visible);
 
   return (
     <section ref={ref} className="py-20 px-4 overflow-hidden">
@@ -160,8 +159,8 @@ const ReceiptComparison = () => {
                 </span>
               </div>
 
-              <div className="space-y-5 relative z-10">
-                <div className="border-b border-[#1a1a1a] pb-4">
+              <div className="space-y-4 relative z-10">
+                <div className="border-b border-[#1a1a1a] pb-3">
                   <div className="text-[#555] text-[10px] uppercase tracking-widest mb-1">Цена в день</div>
                   <div className="flex justify-between items-center">
                     <div className="text-3xl font-black text-primary">~{focusDay}₽</div>
@@ -169,36 +168,24 @@ const ReceiptComparison = () => {
                       ВЫГОДНО
                     </span>
                   </div>
-                  <div className="text-[10px] text-muted-foreground/40 mt-1">дешевле стакана воды</div>
+                  <div className="text-[10px] text-muted-foreground/40 mt-0.5">дешевле стакана воды</div>
                 </div>
 
-                <div className="border-b border-[#1a1a1a] pb-4">
+                <div className="border-b border-[#1a1a1a] pb-3">
                   <div className="text-[#555] text-[10px] uppercase tracking-widest mb-1">Уровень дофамина</div>
                   <div className="flex items-center gap-2">
                     <Brain className="w-4 h-4 text-primary shrink-0" />
-                    <div className="text-2xl font-black text-foreground">ОПТИМАЛЬНЫЙ</div>
+                    <div className="text-xl font-black text-foreground">ОПТИМАЛЬНЫЙ</div>
                   </div>
-                  {/* mini bar */}
                   <div className="mt-2 h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-full transition-all duration-1500"
+                      className="h-full bg-gradient-to-r from-primary/60 to-primary rounded-full transition-all duration-[1500ms]"
                       style={{ width: visible ? "82%" : "0%", transitionDelay: "800ms" }}
                     />
                   </div>
                 </div>
 
-                <div className="border-b border-[#1a1a1a] pb-4">
-                  <div className="text-[#555] text-[10px] uppercase tracking-widest mb-1">Цена в месяц</div>
-                  <div className="flex items-baseline gap-2">
-                    <div className="text-3xl font-black text-foreground">400₽</div>
-                    <span className="text-xs text-muted-foreground line-through">90₽</span>
-                  </div>
-                  <div className="text-[10px] text-primary/60 mt-1">
-                    Экономишь {savedYear.toLocaleString("ru")}₽/год vs кофейня
-                  </div>
-                </div>
-
-                <div className="border-b border-[#1a1a1a] pb-4">
+                <div className="border-b border-[#1a1a1a] pb-3">
                   <div className="text-[#555] text-[10px] uppercase tracking-widest mb-1">Результат</div>
                   <div className="flex items-center gap-2">
                     <Trophy className="w-4 h-4 text-primary shrink-0" />
@@ -206,23 +193,24 @@ const ReceiptComparison = () => {
                   </div>
                 </div>
 
-                <div className="pt-1">
+                <div className="pt-0">
                   <div className="text-[#555] text-[10px] uppercase tracking-widest mb-2">Эффект накапливается</div>
-                  <div className="flex gap-1">
+                  {/* Bars grow UPWARD */}
+                  <div className="flex gap-1.5 items-end h-10 mb-1">
                     {[7, 14, 21, 30, 60, 90].map((d, i) => (
-                      <div key={d} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                          className="w-full rounded-sm bg-primary/20 overflow-hidden"
-                          style={{ height: `${20 + i * 6}px` }}
-                        >
-                          <div
-                            className="w-full bg-primary rounded-sm transition-all duration-700"
-                            style={{
-                              height: visible ? "100%" : "0%",
-                              transitionDelay: `${800 + i * 120}ms`,
-                            }}
-                          />
-                        </div>
+                      <div
+                        key={d}
+                        className="flex-1 bg-gradient-to-t from-primary to-primary/60 rounded-sm transition-all duration-700"
+                        style={{
+                          height: visible ? `${10 + i * 7}px` : "0px",
+                          transitionDelay: `${800 + i * 100}ms`,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    {[7, 14, 21, 30, 60, 90].map((d) => (
+                      <div key={d} className="flex-1 text-center">
                         <span className="text-[8px] text-muted-foreground/40">{d}д</span>
                       </div>
                     ))}
