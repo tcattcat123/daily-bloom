@@ -2,8 +2,19 @@ import { Shield, MessageCircle, Zap } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="border-t border-border px-6 py-12">
-      <div className="max-w-7xl mx-auto">
+    <footer className="relative border-t border-border px-6 py-12 overflow-hidden">
+      {/* Fuji Mountain Background */}
+      <div
+        className="absolute inset-0 opacity-10 pointer-events-none"
+        style={{
+          backgroundImage: 'url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ29dP434tA1llZEUrhczOx9ZQlMta9Ya2_vQ&s)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center bottom',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+
+      <div className="relative max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -16,7 +27,7 @@ const Footer = () => {
             <a href="#" className="hover:text-foreground transition-colors flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" /> Безопасно
             </a>
-            <a href="https://t.me/focusmanager" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1.5">
+            <a href="https://t.me/+kbDT71ZQ6CdlOGQ1" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1.5">
               <MessageCircle className="w-3.5 h-3.5" /> Telegram
             </a>
           </div>
