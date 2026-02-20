@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Check, X, Coffee, Zap, Lock, Users, Search } from "lucide-react";
+import { Check, X, Coffee, Zap, Lock, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -71,13 +71,13 @@ const PricingSection = () => {
                   <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
                     <Zap className="w-5 h-5 text-primary" />
                   </div>
-                  <span className="text-sm font-medium text-primary uppercase tracking-wider">Focus System</span>
+                  <span className="text-sm font-medium text-primary uppercase tracking-wider">Дофаминовый фон</span>
                   <span className="ml-auto text-[10px] uppercase tracking-widest font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">Best</span>
                 </div>
                 <div className="font-heading text-6xl md:text-7xl font-bold text-primary mb-4 glow-text">∞</div>
-                <p className="text-muted-foreground mb-8">Одна инвестиция — навсегда.</p>
+                <p className="text-muted-foreground mb-8">Целый месяц инвестиций в себя</p>
                 <div className="space-y-3">
-                  {["Перезапуск дофамина", "Привычка за 21 день", "Результат навсегда"].map((item, i) => (
+                  {["Запуск дофаминового фона", "Привычка за 21 день", "Результат навсегда"].map((item, i) => (
                     <div key={i} className="flex items-center gap-3 text-sm text-foreground">
                       <Check className="w-4 h-4 text-primary" />
                       <span>{item}</span>
@@ -121,7 +121,7 @@ const PricingSection = () => {
                 <Lock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-semibold mb-1">Ввести инвайт-код</div>
-                  <div className="text-sm text-muted-foreground">Спросите у участников системы</div>
+                  <div className="text-sm text-muted-foreground">Получи код от участников</div>
                 </div>
               </button>
 
@@ -129,28 +129,25 @@ const PricingSection = () => {
                 onClick={() => window.open("https://t.me/focusmanager", "_blank")}
                 className="w-full flex items-start gap-4 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
               >
-                <Users className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold mb-1">Купить пачку кодов за 90₽</div>
-                  <div className="text-sm text-muted-foreground">9 кодов — продавайте или подключайте в команду</div>
-                </div>
-              </button>
-
-              <button
-                onClick={handleSearchCode}
-                className="w-full flex items-start gap-4 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
-              >
                 <Search className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
-                  <div className="font-semibold mb-1">Искать код на сайте</div>
-                  <div className="text-sm text-muted-foreground">Принято — ищите самостоятельно</div>
+                  <div className="font-semibold mb-1">Выполнить задание</div>
+                  <div className="text-sm text-muted-foreground">Получи код за выполнение задания в Telegram</div>
                 </div>
               </button>
             </div>
           ) : selectedOption === "invite" ? (
             <div className="space-y-4 pt-4">
               <p className="text-sm text-muted-foreground">
-                Введите инвайт-код, полученный от участников системы
+                Введите инвайт-код, полученный от участников.{" "}
+                <a
+                  href="https://t.me/+kbDT71ZQ6CdlOGQ1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                >
+                  Искать код в Telegram →
+                </a>
               </p>
               <Input
                 placeholder="Введите код..."

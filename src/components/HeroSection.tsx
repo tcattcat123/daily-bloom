@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowDown, Brain, Sparkles, Lock, Users, Search } from "lucide-react";
+import { ArrowDown, Brain, Sparkles, Lock, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const VALID_INVITES = ["FOCUS2026", "START", "BETA", "WELCOME"];
 
@@ -14,13 +15,43 @@ const HeroSection = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmitInvite = () => {
+  const handleSubmitInvite = async () => {
     const code = inviteCode.trim().toUpperCase();
+
+    // Check hardcoded codes first
     if (VALID_INVITES.includes(code)) {
       setIsModalOpen(false);
       navigate("/welcome");
-    } else {
-      setError("Неверный инвайт-код.");
+      return;
+    }
+
+    // Check database codes
+    try {
+      const { data, error } = await supabase
+        .from('invite_codes')
+        .select('*')
+        .eq('code', code)
+        .eq('used', false)
+        .single();
+
+      if (error || !data) {
+        setError("Неверный или уже использованный инвайт-код.");
+        return;
+      }
+
+      // Mark code as used
+      await supabase
+        .from('invite_codes')
+        .update({
+          used: true,
+          used_at: new Date().toISOString()
+        })
+        .eq('code', code);
+
+      setIsModalOpen(false);
+      navigate("/welcome");
+    } catch (err) {
+      setError("Ошибка проверки кода.");
     }
   };
 
@@ -63,7 +94,7 @@ const HeroSection = () => {
           </h1>
 
           <p className="text-muted-foreground text-lg md:text-xl max-w-xl mx-auto leading-relaxed mb-12">
-            2 минуты в день — и ты запускаешь систему, которая перестраивает мозг. Без силы воли, без выгорания.
+            2 минуты в день — и ты запускаешь дофаминовый фон, который перестраивает мозг. Без силы воли, без выгорания.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -122,18 +153,7 @@ const HeroSection = () => {
                 <Lock className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-semibold mb-1">Ввести инвайт-код</div>
-                  <div className="text-sm text-muted-foreground">Спросите у участников системы</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => window.open("https://t.me/+kbDT71ZQ6CdlOGQ1", "_blank")}
-                className="w-full flex items-start gap-4 p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
-              >
-                <Users className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold mb-1">Купить пачку кодов за 90₽</div>
-                  <div className="text-sm text-muted-foreground">9 кодов для подключения в команду</div>
+                  <div className="text-sm text-muted-foreground">Получи код от участников</div>
                 </div>
               </button>
 
@@ -144,14 +164,22 @@ const HeroSection = () => {
                 <Search className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
                 <div>
                   <div className="font-semibold mb-1">Выполнить задание</div>
-                  <div className="text-sm text-muted-foreground">Получите код за выполнение задания</div>
+                  <div className="text-sm text-muted-foreground">Получи код за выполнение задания в Telegram</div>
                 </div>
               </button>
             </div>
           ) : selectedOption === "invite" ? (
             <div className="space-y-4 pt-4">
               <p className="text-sm text-muted-foreground">
-                Введите инвайт-код, полученный от участников системы
+                Введите инвайт-код, полученный от участников.{" "}
+                <a
+                  href="https://t.me/+kbDT71ZQ6CdlOGQ1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline underline-offset-2 hover:text-primary/80 transition-colors"
+                >
+                  Искать код в Telegram →
+                </a>
               </p>
               <Input
                 placeholder="Введите код..."
