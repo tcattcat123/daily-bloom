@@ -1,4 +1,4 @@
-import { Shield, MessageCircle, Zap } from "lucide-react";
+import { Shield, MessageCircle } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -16,12 +16,7 @@ const Footer = () => {
 
       <div className="relative max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-              <Zap className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <span className="font-heading font-bold text-lg tracking-tight text-foreground">FOCUS</span>
-          </div>
+          <span className="font-heading font-bold text-xl tracking-tight text-foreground">focus.</span>
 
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition-colors flex items-center gap-1.5">
