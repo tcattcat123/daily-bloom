@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Zap } from "lucide-react";
 import { LoginModal } from "@/components/LoginModal";
 
 const Header = () => {
@@ -21,14 +20,9 @@ const Header = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <Zap className="w-4 h-4 text-primary" />
-          </div>
-          <span className="font-heading font-bold text-xl tracking-tight text-foreground">
-            FOCUS
-          </span>
-        </div>
+        <span className="font-heading font-bold text-xl tracking-tight text-foreground">
+          focus.
+        </span>
 
         <div className="flex items-center gap-6">
           <nav className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
